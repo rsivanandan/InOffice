@@ -1,108 +1,127 @@
-import { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useEffect, useState, useMemo } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { TabView, SceneMap } from "react-native-tab-view";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import CalendarScreen from "./src/screens/CalendarScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import WelcomeModal from "./src/components/WelcomeModal";
+import { TabIndexContext } from "./src/utils/TabIndexContext";
 import { initDb, getSetting, setSetting } from "./src/db";
 
-const Tab = createBottomTabNavigator();
+const TABS = [
+  { key: "dashboard", label: "Dashboard", iconOutline: "home-outline", iconFilled: "home" },
+  { key: "calendar", label: "Calendar", iconOutline: "calendar-outline", iconFilled: "calendar" },
+  { key: "insights", label: "Insights", iconOutline: "bar-chart-outline", iconFilled: "bar-chart" },
+  { key: "settings", label: "Settings", iconOutline: "settings-outline", iconFilled: "settings" },
+];
 
-function TabIcon({ label, focused }: Readonly<{ label: string; focused: boolean }>) {
-  const icons: Record<string, { name: string; focusedName: string }> = {
-    Dashboard: { name: "home-outline", focusedName: "home" },
-    Calendar: { name: "calendar-outline", focusedName: "calendar" },
-    Insights: { name: "bar-chart-outline", focusedName: "bar-chart" },
-    Settings: { name: "settings-outline", focusedName: "settings" },
-  };
-  const icon = icons[label] ?? { name: "ellipse-outline" as const, focusedName: "ellipse" as const };
+const ROUTES = TABS.map((t) => ({ key: t.key, title: t.label }));
+
+const renderScene = SceneMap({
+  dashboard: DashboardScreen,
+  calendar: CalendarScreen,
+  insights: InsightsScreen,
+  settings: SettingsScreen,
+});
+
+function BottomTabBar({ index, onTabPress }: Readonly<{ index: number; onTabPress: (i: number) => void }>) {
+  const insets = useSafeAreaInsets();
   return (
-    <Ionicons
-      name={(focused ? icon.focusedName : icon.name) as any}
-      size={focused ? 24 : 22}
-      color={focused ? "#3b82f6" : "#9ca3af"}
-    />
+    <View
+      style={{
+        flexDirection: "row",
+        backgroundColor: "#1e293b",
+        borderTopWidth: 1,
+        borderTopColor: "#334155",
+        paddingBottom: insets.bottom + 4,
+        paddingTop: 6,
+      }}
+    >
+      {TABS.map((tab, i) => {
+        const focused = i === index;
+        return (
+          <TouchableOpacity
+            key={tab.key}
+            onPress={() => onTabPress(i)}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: 4,
+            }}
+          >
+            <Ionicons
+              name={(focused ? tab.iconFilled : tab.iconOutline) as any}
+              size={focused ? 24 : 22}
+              color={focused ? "#3b82f6" : "#9ca3af"}
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: focused ? "600" : "500",
+                color: focused ? "#3b82f6" : "#9ca3af",
+                marginTop: 2,
+              }}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 }
 
-function DashboardTabIcon({ focused }: Readonly<{ focused: boolean }>) {
-  return <TabIcon label="Dashboard" focused={focused} />;
-}
-
-function CalendarTabIcon({ focused }: Readonly<{ focused: boolean }>) {
-  return <TabIcon label="Calendar" focused={focused} />;
-}
-
-function InsightsTabIcon({ focused }: Readonly<{ focused: boolean }>) {
-  return <TabIcon label="Insights" focused={focused} />;
-}
-
-function SettingsTabIcon({ focused }: Readonly<{ focused: boolean }>) {
-  return <TabIcon label="Settings" focused={focused} />;
-}
-
-const screenOptions = {
-  tabBarActiveTintColor: "#3b82f6",
-  tabBarInactiveTintColor: "#9ca3af",
-  headerShown: true,
-  headerStyle: { backgroundColor: "#fff" },
-  headerTitleStyle: { fontWeight: "700" },
-};
-
-export default function App() {
+function AppContent() {
+  const [index, setIndex] = useState(0);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const [ready, setReady] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     initDb().then(async () => {
       const hasLaunched = await getSetting("hasLaunched");
-      if (!hasLaunched) {
-        setWelcomeVisible(true);
-      }
+      if (!hasLaunched) setWelcomeVisible(true);
       setReady(true);
     });
   }, []);
 
   return (
-    <NavigationContainer>
-      <StatusBar style="dark" />
-      <Tab.Navigator screenOptions={screenOptions}>
-        <Tab.Screen
-          name="Dashboard"
-          component={DashboardScreen}
-          options={{ title: "InOffice Dashboard", tabBarLabel: "Dashboard", tabBarIcon: DashboardTabIcon }}
+    <TabIndexContext.Provider value={index}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: insets.top }}>
+        <StatusBar style="light" />
+        <TabView
+          navigationState={{ index, routes: ROUTES }}
+          renderScene={renderScene}
+          onIndexChange={setIndex}
+          renderTabBar={() => null}
+          swipeEnabled
+          animationEnabled
         />
-        <Tab.Screen
-          name="Calendar"
-          component={CalendarScreen}
-          options={{ title: "Calendar", tabBarIcon: CalendarTabIcon }}
-        />
-        <Tab.Screen
-          name="Insights"
-          component={InsightsScreen}
-          options={{ title: "Insights", tabBarIcon: InsightsTabIcon }}
-        />
-        <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ title: "Settings", tabBarIcon: SettingsTabIcon }}
-        />
-      </Tab.Navigator>
+        <BottomTabBar index={index} onTabPress={setIndex} />
+        {ready && (
+          <WelcomeModal
+            visible={welcomeVisible}
+            onDismiss={(name) => {
+              setWelcomeVisible(false);
+              setSetting("hasLaunched", "true");
+              if (name) setSetting("userName", name);
+            }}
+          />
+        )}
+      </View>
+    </TabIndexContext.Provider>
+  );
+}
 
-      {ready && (
-        <WelcomeModal
-          visible={welcomeVisible}
-          onDismiss={(name) => {
-            setWelcomeVisible(false);
-            setSetting("hasLaunched", "true");
-            if (name) setSetting("userName", name);
-          }}
-        />
-      )}
-    </NavigationContainer>
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   );
 }

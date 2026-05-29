@@ -1,11 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo, useEffect, useRef, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { TabIndexContext } from "../utils/TabIndexContext";
 import { format, isFuture, isToday, endOfMonth, eachDayOfInterval } from "date-fns";
 import type { MonthStats, DayRecord } from "../types";
 import { getSetting, getDay, getAllDays, setDayStatus, initDb } from "../db";
 import { isWorkingDay, calcMonthStats, getPlural } from "../utils/stats";
 import StatItem from "../components/StatItem";
+
+const MY_INDEX = 0;
 
 function getGreeting(hour: number): string {
   if (hour < 12) return "morning";
@@ -21,7 +23,7 @@ function getPct(stats: MonthStats | null, excludeLeaves: boolean): number {
   return Math.round((stats.inOfficeDays / denom) * 100);
 }
 
-function ProgressRing({ pct, target, size = 110 }: Readonly<{ pct: number; target: number; size?: number }>) {
+const ProgressRing = memo(function ProgressRing({ pct, target, size = 110 }: Readonly<{ pct: number; target: number; size?: number }>) {
   const fillPct = Math.min((Math.min(pct, 100) / target) * 100, 100);
   const half = size / 2;
   const stroke = 8;
@@ -71,9 +73,9 @@ function ProgressRing({ pct, target, size = 110 }: Readonly<{ pct: number; targe
       </View>
     </View>
   );
-}
+});
 
-function InclExclToggle({
+const InclExclToggle = memo(function InclExclToggle({
   excludeLeaves,
   onChange,
 }: Readonly<{
@@ -102,9 +104,9 @@ function InclExclToggle({
       </TouchableOpacity>
     </View>
   );
-}
+});
 
-function TargetStatus({
+const TargetStatus = memo(function TargetStatus({
   stillNeed,
   remainingDays,
   targetPct,
@@ -116,7 +118,7 @@ function TargetStatus({
   if (stillNeed <= 0) {
     return (
       <Text style={{ fontSize: 13, color: "#22c55e", textAlign: "center", fontWeight: "600" }}>
-        ✓ You've met your {targetPct}% target
+        ✓ Met your {targetPct}% target
       </Text>
     );
   }
@@ -130,9 +132,9 @@ function TargetStatus({
       {suffix}
     </Text>
   );
-}
+});
 
-function DashboardHeader({
+const DashboardHeader = memo(function DashboardHeader({
   isMarked,
   timeGreeting,
   userName,
@@ -145,12 +147,12 @@ function DashboardHeader({
 }>) {
   const greeting = userName ? `Good ${timeGreeting}, ${userName}` : `Good ${timeGreeting}`;
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
-      <View style={{ marginTop: 16, marginBottom: 20 }}>
-        <Text style={{ fontSize: 28, fontWeight: "800", color: "#f8fafc", lineHeight: 34 }}>
-          {isMarked ? "You're in \nthe office" : "Not marked\nfor today"}
+    <View style={{ paddingHorizontal: 20, paddingTop: 4 }}>
+      <View style={{ marginBottom: 12 }}>
+        <Text style={{ fontSize: 24, fontWeight: "800", color: "#f8fafc" }}>
+          {isMarked ? "Marked for today" : "Not marked for today"}
         </Text>
-        <Text style={{ fontSize: 14, fontWeight: "400", color: "#64748b", marginTop: 4, lineHeight: 18 }}>
+        <Text style={{ fontSize: 13, fontWeight: "400", color: "#64748b", marginTop: 2, lineHeight: 16 }}>
           {isMarked
             ? `${greeting} — another productive day.`
             : `Tap to log your day, ${userName || "friend"}.`}
@@ -163,10 +165,10 @@ function DashboardHeader({
         activeOpacity={0.85}
         style={{
           backgroundColor: "#22c55e",
-          paddingVertical: 14,
-          borderRadius: 12,
+          paddingVertical: 12,
+          borderRadius: 10,
           alignItems: "center",
-          marginBottom: 20,
+          marginBottom: 12,
         }}
       >
         <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
@@ -175,10 +177,7 @@ function DashboardHeader({
       </TouchableOpacity>
     </View>
   );
-}
-
-const now = new Date();
-const todayStr = format(now, "yyyy-MM-dd");
+});
 
 function calcYtdStats(
   year: number,
@@ -199,6 +198,8 @@ function calcYtdStats(
 }
 
 export default function DashboardScreen() {
+  const now = new Date();
+  const todayStr = format(now, "yyyy-MM-dd");
   const [todayStatus, setTodayStatus] = useState<string | null>(null);
   const [stats, setStats] = useState<MonthStats | null>(null);
   const [ytdStats, setYtdStats] = useState<MonthStats | null>(null);
@@ -206,24 +207,38 @@ export default function DashboardScreen() {
   const [excludeLeaves, setExcludeLeaves] = useState(false);
   const [userName, setUserName] = useState("");
   const [viewDate, setViewDate] = useState(now);
+  const tabIndex = useContext(TabIndexContext);
+  const cancelledRef = useRef(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      initDb().then(async () => {
-        const day = await getDay(todayStr);
+  useEffect(() => {
+    if (tabIndex !== MY_INDEX) return;
+    cancelledRef.current = false;
+    const n = new Date();
+    const ts = format(n, "yyyy-MM-dd");
+    initDb()
+      .then(async () => {
+        if (cancelledRef.current) return;
+        const day = await getDay(ts);
+        if (cancelledRef.current) return;
         setTodayStatus(day?.status ?? null);
         const target = await getSetting("targetPct");
+        if (cancelledRef.current) return;
         setTargetPct(target ? Number.parseInt(target, 10) : 60);
         const name = await getSetting("userName");
+        if (cancelledRef.current) return;
         if (name) setUserName(name);
         const allRecords = await getAllDays();
+        if (cancelledRef.current) return;
         const vyear = viewDate.getFullYear();
         const vmonth = viewDate.getMonth() + 1;
         setStats(calcMonthStats(vyear, vmonth, allRecords));
-        setYtdStats(calcYtdStats(now.getFullYear(), now.getMonth() + 1, allRecords));
-      });
-    }, [viewDate])
-  );
+        setYtdStats(calcYtdStats(n.getFullYear(), n.getMonth() + 1, allRecords));
+      })
+      .catch(() => {});
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [tabIndex, viewDate]);
 
   async function markToday() {
     await setDayStatus(todayStr, "in-office");
@@ -232,7 +247,6 @@ export default function DashboardScreen() {
   }
 
   const pct = getPct(stats, excludeLeaves);
-
   const workingDaysTotal = excludeLeaves && stats ? stats.netWorkingDays : (stats?.totalWorkingDays ?? 0);
   const targetNeed = Math.ceil(workingDaysTotal * targetPct / 100);
   const stillNeed = Math.max(0, targetNeed - (stats?.inOfficeDays ?? 0));
@@ -256,8 +270,8 @@ export default function DashboardScreen() {
   const timeGreeting = getGreeting(hour);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: "#0f172a" }} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={{ paddingHorizontal: 20, paddingTop: 12, fontSize: 13, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
+    <ScrollView style={{ flex: 1, backgroundColor: "#0f172a" }} contentContainerStyle={{ paddingBottom: 160 }}>
+      <Text style={{ paddingHorizontal: 20, paddingTop: 8, fontSize: 11, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
         {format(now, "EEEE, MMMM d")}
       </Text>
 

@@ -38,6 +38,8 @@ const SECTIONS = [
       "Set your Target % (50–100%)",
       "Color Legend explains each status",
       "Export / Import Excel files for backup",
+      "Backup Database — share a .db copy of all data",
+      "Restore Database — pick a .db backup to restore from",
       "Download Sample to get a template",
       "Delete All Data to reset everything",
     ],

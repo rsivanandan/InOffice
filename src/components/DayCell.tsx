@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TouchableOpacity, Text, View } from "react-native";
 import type { DayStatus } from "../types";
 
@@ -58,15 +59,17 @@ interface Props {
   isCurrentMonth: boolean;
   isToday: boolean;
   status: DayStatus;
-  onPress: () => void;
-  onLongPress: () => void;
+  dateKey: string;
+  onPress: (key: string) => void;
+  onLongPress: (key: string) => void;
 }
 
-export default function DayCell({
+const DayCell = memo(function DayCell({
   day,
   isCurrentMonth,
   isToday,
   status,
+  dateKey,
   onPress,
   onLongPress,
 }: Readonly<Props>) {
@@ -87,8 +90,8 @@ export default function DayCell({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={() => onPress(dateKey)}
+      onLongPress={() => onLongPress(dateKey)}
       style={{
         flex: 1,
         margin: 1,
@@ -124,4 +127,6 @@ export default function DayCell({
       )}
     </TouchableOpacity>
   );
-}
+});
+
+export default DayCell;

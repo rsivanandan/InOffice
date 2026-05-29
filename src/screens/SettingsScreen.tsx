@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Share } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { TabIndexContext } from "../utils/TabIndexContext";
 import { getSetting, setSetting, initDb, deleteAllData, exportToExcel, importFromExcel, downloadSampleExcel, backupDatabase, restoreDatabase } from "../db";
 import HelpModal from "../components/HelpModal";
+
+const MY_INDEX = 3;
 
 const LEGEND: { label: string; color: string; desc: string }[] = [
   { label: "In Office", color: "#22c55e", desc: "You came to the office" },
@@ -42,17 +44,23 @@ function ActionRow({
 export default function SettingsScreen() {
   const [targetPct, setTargetPct] = useState(60);
   const [helpVisible, setHelpVisible] = useState(false);
+  const tabIndex = useContext(TabIndexContext);
+  const cancelledRef = useRef(false);
 
-
-  useFocusEffect(
-    useCallback(() => {
-      initDb().then(async () => {
+  useEffect(() => {
+    if (tabIndex !== MY_INDEX) return;
+    cancelledRef.current = false;
+    initDb()
+      .then(async () => {
+        if (cancelledRef.current) return;
         const t = await getSetting("targetPct");
-        if (t) setTargetPct(Number.parseInt(t, 10));
-
-      });
-    }, [])
-  );
+        if (!cancelledRef.current && t) setTargetPct(Number.parseInt(t, 10));
+      })
+      .catch(() => {});
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [tabIndex]);
 
   async function updateTarget(val: number) {
     setTargetPct(val);
@@ -74,16 +82,17 @@ export default function SettingsScreen() {
         <Text style={{ fontSize: 40, fontWeight: "800", color: "#3b82f6", textAlign: "center", marginBottom: 12 }}>
           {targetPct}%
         </Text>
-        <View style={{ flexDirection: "row", gap: 8, justifyContent: "center" }}>
+        <View style={{ flexDirection: "row", gap: 6, justifyContent: "center" }}>
           {presets.map((p) => (
             <View
               key={p}
               onTouchEnd={() => updateTarget(p)}
               style={{
-                paddingHorizontal: 16,
+                flex: 1,
                 paddingVertical: 8,
                 borderRadius: 8,
                 backgroundColor: targetPct === p ? "#3b82f6" : "#334155",
+                alignItems: "center",
               }}
             >
               <Text style={{ fontWeight: "700", color: targetPct === p ? "white" : "#94a3b8" }}>

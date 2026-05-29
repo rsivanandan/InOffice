@@ -1,14 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useRef, useContext, memo } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { TabIndexContext } from "../utils/TabIndexContext";
 import { format } from "date-fns";
 import { getAllDays, initDb } from "../db";
 import type { MonthStats } from "../types";
 import { calcMonthStats } from "../utils/stats";
-
 import StatItem from "../components/StatItem";
 
-function StatCard({
+const MY_INDEX = 2;
+
+const StatCard = memo(function StatCard({
   title,
   stats: s,
   excludeLeaves,
@@ -50,9 +51,9 @@ function StatCard({
       </View>
     </View>
   );
-}
+});
 
-function MonthBreakdownCard({
+const MonthBreakdownCard = memo(function MonthBreakdownCard({
   month,
   year,
   stats: s,
@@ -96,26 +97,32 @@ function MonthBreakdownCard({
       </View>
     </View>
   );
-}
+});
 
 export default function InsightsScreen() {
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [excludeLeaves, setExcludeLeaves] = useState(false);
-
-  function prevYear() { setCurrentYear((y) => y - 1); }
-  function nextYear() { setCurrentYear((y) => y + 1); }
   const [stats, setStats] = useState<MonthStats | null>(null);
   const [ytdStats, setYtdStats] = useState<MonthStats | null>(null);
   const [monthBreakdown, setMonthBreakdown] = useState<{ month: number; stats: MonthStats }[]>([]);
+  const tabIndex = useContext(TabIndexContext);
+  const cancelledRef = useRef(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      initDb().then(async () => {
+  function prevYear() { setCurrentYear((y) => y - 1); }
+  function nextYear() { setCurrentYear((y) => y + 1); }
+
+  useEffect(() => {
+    if (tabIndex !== MY_INDEX) return;
+    cancelledRef.current = false;
+    initDb()
+      .then(async () => {
+        if (cancelledRef.current) return;
         const records = await getAllDays();
 
         const monthStats = calcMonthStats(currentYear, currentMonth, records);
+        if (cancelledRef.current) return;
         setStats(monthStats);
 
         const months = Array.from(
@@ -127,6 +134,7 @@ export default function InsightsScreen() {
           month: m,
           stats: calcMonthStats(currentYear, m, records),
         }));
+        if (cancelledRef.current) return;
         setMonthBreakdown(breakdown);
 
         const ytd = breakdown.reduce<MonthStats>(
@@ -155,10 +163,14 @@ export default function InsightsScreen() {
           ytd.netWorkingDays > 0
             ? Math.round((ytd.inOfficeDays / ytd.netWorkingDays) * 100)
             : 0;
+        if (cancelledRef.current) return;
         setYtdStats(ytd);
-      });
-    }, [currentYear, currentMonth])
-  );
+      })
+      .catch(() => {});
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [tabIndex, currentYear, currentMonth]);
 
   return (
     <ScrollView

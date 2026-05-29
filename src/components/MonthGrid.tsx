@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { View, Text } from "react-native";
 import {
   startOfMonth,
@@ -47,23 +47,19 @@ export default function MonthGrid({ year, month, records, onUpdate }: Readonly<P
     [year, month]
   );
 
-  function getStatus(d: Date): DayStatus {
-    const key = format(d, "yyyy-MM-dd");
-    return recordMap.get(key) ?? "absent";
-  }
-
-  function handlePress(d: Date) {
-    const key = format(d, "yyyy-MM-dd");
-    setSelectedDate(key);
+  const handlePress = useCallback((dateKey: string) => {
+    setSelectedDate(dateKey);
     setPickerVisible(true);
-  }
+  }, []);
 
-  function handleLongPress(d: Date) {
-    const key = format(d, "yyyy-MM-dd");
-    const current = getStatus(d);
-    const next: DayStatus = current === "in-office" ? "absent" : "in-office";
-    onUpdate(key, next);
-  }
+  const handleLongPress = useCallback(
+    (dateKey: string) => {
+      const current = recordMap.get(dateKey) ?? "absent";
+      const next: DayStatus = current === "in-office" ? "absent" : "in-office";
+      onUpdate(dateKey, next);
+    },
+    [recordMap, onUpdate]
+  );
 
   function handleSelect(status: DayStatus) {
     onUpdate(selectedDate, status);
@@ -95,19 +91,23 @@ export default function MonthGrid({ year, month, records, onUpdate }: Readonly<P
         {[0, 1, 2, 3, 4, 5].map((row) => (
           <View key={row} style={{ flex: 1, flexDirection: "row" }}>
             {days.slice(row * 7, row * 7 + 7).map((d) => {
+              const key = format(d, "yyyy-MM-dd");
               const dayNum = d.getDate();
               const isCurrent = d.getMonth() === currentMonth;
-              const status = getStatus(d);
+              const status = isCurrent
+                ? (recordMap.get(key) ?? "absent")
+                : "absent";
 
               return (
                 <DayCell
-                  key={d.toISOString()}
+                  key={key}
                   day={isCurrent ? dayNum : 0}
                   isCurrentMonth={isCurrent}
                   isToday={isSameDay(d, today)}
-                  status={isCurrent ? status : "absent"}
-                  onPress={() => handlePress(d)}
-                  onLongPress={() => handleLongPress(d)}
+                  status={status}
+                  dateKey={key}
+                  onPress={handlePress}
+                  onLongPress={handleLongPress}
                 />
               );
             })}

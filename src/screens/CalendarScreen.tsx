@@ -1,26 +1,37 @@
-import { useState, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { TabIndexContext } from "../utils/TabIndexContext";
 import { format, addMonths, subMonths } from "date-fns";
 import MonthGrid from "../components/MonthGrid";
 import { getMonthDays, setDayStatus, initDb } from "../db";
 import type { DayRecord, DayStatus } from "../types";
 
+const MY_INDEX = 1;
+
 export default function CalendarScreen() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [records, setRecords] = useState<DayRecord[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      initDb().then(() => loadRecords());
-    }, [year, month])
-  );
+  const tabIndex = useContext(TabIndexContext);
+  const cancelledRef = useRef(false);
 
   async function loadRecords() {
     const data = await getMonthDays(year, month);
-    setRecords(data);
+    if (!cancelledRef.current) setRecords(data);
   }
+
+  useEffect(() => {
+    if (tabIndex !== MY_INDEX) return;
+    cancelledRef.current = false;
+    initDb()
+      .then(() => {
+        if (!cancelledRef.current) loadRecords();
+      })
+      .catch(() => {});
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [tabIndex, year, month]);
 
   const handleUpdate = useCallback(
     async (date: string, status: DayStatus) => {
@@ -51,7 +62,7 @@ export default function CalendarScreen() {
   const today = format(new Date(), "yyyy-MM-dd");
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
+    <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: 4 }}>
       <View
         style={{
           flexDirection: "row",

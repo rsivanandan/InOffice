@@ -9,6 +9,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="absent"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -23,6 +24,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="absent"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -37,6 +39,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="public-holiday"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -51,6 +54,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="personal-leave"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -65,6 +69,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="sick-leave"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -79,6 +84,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="in-office"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -95,6 +101,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday={false}
         status="in-office"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -109,6 +116,7 @@ describe("DayCell", () => {
         isCurrentMonth
         isToday
         status="absent"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
@@ -123,6 +131,7 @@ describe("DayCell", () => {
         isCurrentMonth={false}
         isToday={false}
         status="absent"
+        dateKey="2026-01-15"
         onPress={() => {}}
         onLongPress={() => {}}
       />
