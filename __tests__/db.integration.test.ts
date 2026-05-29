@@ -14,6 +14,8 @@ jest.mock("expo-sqlite", () => {
       getFirstAsync: mockGetFirstAsync,
       getAllAsync: mockGetAllAsync,
       execAsync: mockExecAsync,
+      closeAsync: jest.fn(),
+      databasePath: "file:///mock/rto.db",
     })),
     SQLiteDatabase: {},
     __mockRunAsync: mockRunAsync,
@@ -31,15 +33,18 @@ let mockBase64Result = "";
 
 jest.mock("expo-file-system", () => {
   const mockWrite = jest.fn();
-  const File = jest.fn().mockImplementation(() => ({
+  const mockPickFileAsync = jest.fn();
+  const File = jest.fn().mockImplementation((...args) => ({
     write: mockWrite,
-    uri: "file:///cache/test.xlsx",
+    uri: args.length === 1 ? args[0] : `${args[0]}/${args[1]}`,
     base64: jest.fn().mockImplementation(async () => mockBase64Result),
   }));
+  File.pickFileAsync = mockPickFileAsync;
   return {
     Paths: { cache: "file:///cache" },
     File,
     __mockWrite: mockWrite,
+    __mockPickFileAsync: mockPickFileAsync,
   };
 });
 
@@ -59,6 +64,8 @@ const {
   exportToExcel,
   downloadSampleExcel,
   importFromExcel,
+  backupDatabase,
+  restoreDatabase,
 } = require("../src/db");
 
 const mocks = SQLite as unknown as {
@@ -72,6 +79,7 @@ const mocks = SQLite as unknown as {
 const fsMocks = require("expo-file-system") as unknown as {
   File: jest.Mock;
   __mockWrite: jest.Mock;
+  __mockPickFileAsync: jest.Mock;
 };
 
 describe("DB module (mocked)", () => {
@@ -190,7 +198,7 @@ describe("DB module (mocked)", () => {
       expect(mocks.__mockGetAllAsync).toHaveBeenCalled();
       expect(fsMocks.__mockWrite).toHaveBeenCalled();
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
-        "file:///cache/test.xlsx",
+        "file:///cache/rto-attendance.xlsx",
         expect.objectContaining({ mimeType: expect.stringContaining("spreadsheetml") })
       );
     });
@@ -209,7 +217,7 @@ describe("DB module (mocked)", () => {
 
       expect(fsMocks.__mockWrite).toHaveBeenCalled();
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
-        "file:///cache/test.xlsx",
+        "file:///cache/rto-sample.xlsx",
         expect.objectContaining({ mimeType: expect.stringContaining("spreadsheetml") })
       );
     });
@@ -289,6 +297,68 @@ describe("DB module (mocked)", () => {
       const result = await importFromExcel();
       expect(result).toBe(0);
       expect(mocks.__mockRunAsync).not.toHaveBeenCalled();
+    });
+
+    it("importFromExcel returns 0 when sheet is missing", async () => {
+      docPicker.getDocumentAsync.mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "file:///picked/test.xlsx" }],
+      });
+      jest.spyOn(XLSX, "read").mockReturnValueOnce({
+        SheetNames: ["Sheet1"],
+        Sheets: {},
+      });
+      mockBase64Result = "fake-base64";
+
+      const result = await importFromExcel();
+      expect(result).toBe(0);
+      expect(mocks.__mockRunAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Database backup/restore", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("backupDatabase copies db and shares", async () => {
+      await backupDatabase();
+
+      expect(fsMocks.__mockWrite).toHaveBeenCalled();
+      expect(Sharing.shareAsync).toHaveBeenCalledWith(
+        "file:///cache/rto-backup.db",
+        expect.objectContaining({ mimeType: "application/octet-stream" })
+      );
+    });
+
+    it("restoreDatabase returns false when picker canceled", async () => {
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({ canceled: true });
+
+      const result = await restoreDatabase();
+
+      expect(result).toBe(false);
+      expect(fsMocks.__mockPickFileAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ mimeTypes: ["*/*"] })
+      );
+    });
+
+    it("restoreDatabase writes picked file and returns true", async () => {
+      const mockBase64 = "b64-content";
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
+        canceled: false,
+        result: {
+          base64: jest.fn().mockResolvedValue(mockBase64),
+        },
+      });
+
+      const result = await restoreDatabase();
+
+      expect(result).toBe(true);
+      expect(fsMocks.__mockPickFileAsync).toHaveBeenCalled();
+      expect(fsMocks.__mockWrite).toHaveBeenCalled();
+      expect(mocks.__mockExecAsync).toHaveBeenCalledWith(
+        expect.stringContaining("CREATE TABLE IF NOT EXISTS days")
+      );
     });
   });
 });

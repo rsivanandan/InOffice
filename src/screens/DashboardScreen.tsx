@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useEffect, useRef, useContext } from "react";
+import { useState, memo, useEffect, useRef, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { TabIndexContext } from "../utils/TabIndexContext";
 import { format, isFuture, isToday, endOfMonth, eachDayOfInterval } from "date-fns";
@@ -147,14 +147,14 @@ const DashboardHeader = memo(function DashboardHeader({
 }>) {
   const greeting = userName ? `Good ${timeGreeting}, ${userName}` : `Good ${timeGreeting}`;
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 4 }}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 5 }}>
       <View style={{ marginBottom: 12 }}>
         <Text style={{ fontSize: 24, fontWeight: "800", color: "#f8fafc" }}>
           {isMarked ? "Marked for today" : "Not marked for today"}
         </Text>
-        <Text style={{ fontSize: 13, fontWeight: "400", color: "#64748b", marginTop: 2, lineHeight: 16 }}>
+        <Text style={{ fontSize: 13, fontWeight: "400", color: "#64748b", marginTop: 2, lineHeight: 16, marginBottom: 4 }}>
           {isMarked
-            ? `${greeting} — another productive day.`
+            ? `${greeting}\n— another productive day.`
             : `Tap to log your day, ${userName || "friend"}.`}
         </Text>
       </View>
@@ -271,11 +271,13 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#0f172a" }} contentContainerStyle={{ paddingBottom: 160 }}>
-      <Text style={{ paddingHorizontal: 20, paddingTop: 8, fontSize: 11, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
+      <Text style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, fontSize: 11, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
         {format(now, "EEEE, MMMM d")}
       </Text>
 
       <DashboardHeader isMarked={isMarked} timeGreeting={timeGreeting} userName={userName} onMarkToday={markToday} />
+
+      <View style={{ height: 24 }} />
 
       {stats && (
         <View

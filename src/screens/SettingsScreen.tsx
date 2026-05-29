@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Share } from "react-native";
 import { TabIndexContext } from "../utils/TabIndexContext";
 import { getSetting, setSetting, initDb, deleteAllData, exportToExcel, importFromExcel, downloadSampleExcel, backupDatabase, restoreDatabase } from "../db";
@@ -195,7 +195,7 @@ export default function SettingsScreen() {
           label="Restore Database"
           description="Pick a .db backup file to restore from"
           color="#f59e0b"
-          onPress={async () => { try { await restoreDatabase(); Alert.alert("Restored", "Database restored from backup."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
+          onPress={async () => { try { const ok = await restoreDatabase(); if (ok) Alert.alert("Restored", "Database restored from backup."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
           border={false}
         />
       </View>

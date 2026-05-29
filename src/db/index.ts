@@ -83,12 +83,12 @@ export async function backupDatabase(): Promise<void> {
   });
 }
 
-export async function restoreDatabase(): Promise<void> {
+export async function restoreDatabase(): Promise<boolean> {
   await initDb();
   const result = await File.pickFileAsync({
     mimeTypes: ["*/*"],
   });
-  if (result.canceled) return;
+  if (result.canceled) return false;
   const picked = result.result;
   const content = await picked.base64();
   const dbPath = db.databasePath;
@@ -96,6 +96,7 @@ export async function restoreDatabase(): Promise<void> {
   const dbFile = new File(dbPath);
   dbFile.write(content, { encoding: "base64" });
   await initDb();
+  return true;
 }
 
 const VALID_STATUSES: ReadonlySet<DayStatus> = new Set([

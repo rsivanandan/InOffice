@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, ScrollView } from "react-native";
 
 const LEGEND = [
   { label: "In Office", color: "#22c55e" },
@@ -28,7 +28,7 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
   return (
     <Modal visible={visible} transparent={false} animationType="fade">
       <View style={{ flex: 1, backgroundColor: "#0f172a", paddingHorizontal: 32, paddingTop: 80, paddingBottom: 40 }}>
-        <View style={{ flex: 1, justifyContent: "center" }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
           <Text style={{ fontSize: 42, fontWeight: "900", color: "#ffffff", letterSpacing: -1 }}>
             InOffice
           </Text>
@@ -36,19 +36,9 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
             Track Your Office Days
           </Text>
 
-          <View style={{ marginTop: 48, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
+          <View style={{ marginTop: 32, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: "#e2e8f0", marginBottom: 16, letterSpacing: 0.5 }}>
-              HOW IT WORKS
-            </Text>
-
-            <StepItem num="01" text="Tap any day to open the status picker and choose how your day went" />
-            <StepItem num="02" text="Long-press a day to quickly toggle In Office / Absent" />
-            <StepItem num="03" text="Set your attendance target in Settings and track progress on the Dashboard" />
-          </View>
-
-          <View style={{ marginTop: 24, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#e2e8f0", marginBottom: 16, letterSpacing: 0.5 }}>
-              ABOUT YOU
+              WHAT DO I CALL YOU?
             </Text>
             <TextInput
               value={name}
@@ -73,6 +63,16 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
 
           <View style={{ marginTop: 24, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: "#e2e8f0", marginBottom: 16, letterSpacing: 0.5 }}>
+              HOW IT WORKS
+            </Text>
+
+            <StepItem num="01" text="Tap any day to open the status picker and choose how your day went" />
+            <StepItem num="02" text="Long-press a day to quickly toggle In Office / Absent" />
+            <StepItem num="03" text="Set your attendance target in Settings and track progress on the Dashboard" />
+          </View>
+
+          <View style={{ marginTop: 24, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#e2e8f0", marginBottom: 16, letterSpacing: 0.5 }}>
               DAY STATUSES
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
@@ -88,7 +88,7 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
               ))}
             </View>
           </View>
-        </View>
+        </ScrollView>
 
         <TouchableOpacity
           onPress={() => onDismiss(name.trim())}

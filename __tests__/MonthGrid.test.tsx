@@ -61,6 +61,16 @@ describe("MonthGrid", () => {
     expect(onUpdate).toHaveBeenCalledWith("2026-05-15", "absent");
   });
 
+  it("closes picker when backdrop is pressed", () => {
+    const { getByText, getByTestId, queryByText } = render(
+      <MonthGrid year={2026} month={5} records={[]} onUpdate={() => {}} />
+    );
+    fireEvent.press(getByText("15"));
+    expect(getByText("In Office")).toBeTruthy();
+    fireEvent.press(getByTestId("status-picker-backdrop"));
+    expect(queryByText("In Office")).toBeNull();
+  });
+
   it("closes picker when a status is selected", () => {
     const onUpdate = jest.fn();
     const { getByText, queryByText } = render(
