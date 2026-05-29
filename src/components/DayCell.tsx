@@ -69,7 +69,7 @@ export default function DayCell({
   status,
   onPress,
   onLongPress,
-}: Props) {
+}: Readonly<Props>) {
   if (day === 0) {
     return <View style={{ flex: 1, margin: 1 }} />;
   }
@@ -77,9 +77,13 @@ export default function DayCell({
   const ooo = isOoo(status);
   const bgColor = getBgColor(ooo, isToday, status);
   const borderColor = getBorderColor(isToday, ooo);
+  const borderWidth = getBorderWidth(isToday, ooo);
   const textColor = getTextColor(ooo);
   const labelColor = getLabelColor(ooo);
   const letter = LABEL[status];
+  const fontWeight = isToday ? "700" : "600";
+  const opacity = isCurrentMonth ? 1 : 0.3;
+  const tileMarginTop = letter ? 1 : 3;
 
   return (
     <TouchableOpacity
@@ -90,14 +94,14 @@ export default function DayCell({
         margin: 1,
         borderRadius: 8,
         backgroundColor: bgColor,
-        borderWidth: getBorderWidth(isToday, ooo),
+        borderWidth,
         borderColor,
         alignItems: "center",
         justifyContent: "center",
-        opacity: isCurrentMonth ? 1 : 0.3,
+        opacity,
       }}
     >
-      <Text style={{ fontSize: 17, fontWeight: isToday ? "700" : "600", color: textColor }}>
+      <Text style={{ fontSize: 17, fontWeight, color: textColor }}>
         {day}
       </Text>
 
@@ -114,7 +118,7 @@ export default function DayCell({
             height: 6,
             borderRadius: 3,
             backgroundColor: TILE_COLORS[status],
-            marginTop: letter ? 1 : 3,
+            marginTop: tileMarginTop,
           }}
         />
       )}

@@ -22,7 +22,7 @@ interface Props {
   onUpdate: (date: string, status: DayStatus) => void;
 }
 
-export default function MonthGrid({ year, month, records, onUpdate }: Props) {
+export default function MonthGrid({ year, month, records, onUpdate }: Readonly<Props>) {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
 

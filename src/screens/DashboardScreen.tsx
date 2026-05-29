@@ -176,12 +176,14 @@ function TargetStatus({
       </Text>
     );
   }
+  const remainSuffix = remainingDays === 1 ? "s" : "";
+  const suffix = remainingDays > 0
+    ? ` ${remainingDays} working day${getPlural(remainingDays)} remain${remainSuffix} this month.`
+    : "";
   return (
     <Text style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", lineHeight: 18, fontWeight: "400" }}>
       You need <Text style={{ fontWeight: "700", color: "#f8fafc" }}>{stillNeed}</Text> more day{getPlural(stillNeed)} in the office.
-      {remainingDays > 0
-        ? ` ${remainingDays} working day${getPlural(remainingDays)} remain${remainingDays === 1 ? "s" : ""} this month.`
-        : ""}
+      {suffix}
     </Text>
   );
 }
@@ -267,7 +269,7 @@ export default function DashboardScreen() {
         const day = await getDay(todayStr);
         setTodayStatus(day?.status ?? null);
         const target = await getSetting("targetPct");
-        setTargetPct(target ? parseInt(target, 10) : 60);
+        setTargetPct(target ? Number.parseInt(target, 10) : 60);
         const name = await getSetting("userName");
         if (name) setUserName(name);
         const allRecords = await getAllDays();
@@ -294,13 +296,16 @@ export default function DashboardScreen() {
   const viewingCurrentMonth =
     viewDate.getMonth() === now.getMonth() && viewDate.getFullYear() === now.getFullYear();
   const viewIsPast = viewDate < new Date(now.getFullYear(), now.getMonth(), 1);
-  const remainingDays = stats
-    ? viewingCurrentMonth
-      ? eachDayOfInterval({ start: now, end: endOfMonth(now) }).filter(
-          (d) => isFuture(d) || isToday(d)
-        ).filter(isWorkingDay).length
-      : viewIsPast ? 0 : stats.totalWorkingDays
-    : 0;
+  let remainingDays = 0;
+  if (stats) {
+    if (viewingCurrentMonth) {
+      remainingDays = eachDayOfInterval({ start: now, end: endOfMonth(now) }).filter(
+        (d) => isFuture(d) || isToday(d)
+      ).filter(isWorkingDay).length;
+    } else if (!viewIsPast) {
+      remainingDays = stats.totalWorkingDays;
+    }
+  }
   const isMarked = todayStatus === "in-office";
 
   const hour = now.getHours();

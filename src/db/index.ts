@@ -98,10 +98,10 @@ export async function restoreDatabase(): Promise<void> {
   await initDb();
 }
 
-const VALID_STATUSES: DayStatus[] = [
+const VALID_STATUSES: ReadonlySet<DayStatus> = new Set([
   "in-office", "absent", "public-holiday",
   "personal-leave", "sick-leave",
-];
+]);
 
 export async function exportToExcel() {
   const days = await getAllDays();
@@ -159,7 +159,7 @@ export async function importFromExcel(): Promise<number> {
   let count = 0;
   for (const row of data) {
     const status = row.Status?.trim().toLowerCase();
-    if (row.Date && status && VALID_STATUSES.includes(status as DayStatus)) {
+    if (row.Date && status && VALID_STATUSES.has(status as DayStatus)) {
       await db.runAsync(
         "INSERT OR REPLACE INTO days (date, status) VALUES (?, ?)",
         [row.Date, status]

@@ -60,7 +60,7 @@ const SECTIONS = [
   },
 ];
 
-export default function HelpModal({ visible, onDismiss }: Props) {
+export default function HelpModal({ visible, onDismiss }: Readonly<Props>) {
   return (
     <Modal visible={visible} transparent={false} animationType="fade">
       <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
@@ -79,8 +79,8 @@ export default function HelpModal({ visible, onDismiss }: Props) {
               <Text style={{ fontSize: 14, fontWeight: "700", color: "#374151", marginBottom: 10 }}>
                 {section.title}
               </Text>
-              {section.items.map((item, i) => (
-                <View key={i} style={{ flexDirection: "row", marginBottom: 6, alignItems: "flex-start" }}>
+              {section.items.map((item) => (
+                <View key={item} style={{ flexDirection: "row", marginBottom: 6, alignItems: "flex-start" }}>
                   <Text style={{ color: "#3b82f6", marginRight: 8, fontSize: 14 }}>•</Text>
                   <Text style={{ color: "#6b7280", fontSize: 13, flex: 1, lineHeight: 18 }}>
                     {item}

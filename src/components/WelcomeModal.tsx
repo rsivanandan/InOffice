@@ -14,7 +14,7 @@ interface Props {
   onDismiss: (name: string) => void;
 }
 
-export default function WelcomeModal({ visible, onDismiss }: Props) {
+export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
   const [name, setName] = useState("");
   return (
     <Modal visible={visible} transparent={false} animationType="fade">

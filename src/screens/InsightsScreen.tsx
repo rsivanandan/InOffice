@@ -199,7 +199,7 @@ function MonthBreakdownCard({
 
 export default function InsightsScreen() {
   const today = new Date();
-  const [currentMonth] = useState(today.getMonth() + 1);
+  const currentMonth = today.getMonth() + 1;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [excludeLeaves, setExcludeLeaves] = useState(false);
 

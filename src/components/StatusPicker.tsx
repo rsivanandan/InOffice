@@ -21,7 +21,7 @@ export default function StatusPicker({
   dateLabel,
   onSelect,
   onClose,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <TouchableOpacity

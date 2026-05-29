@@ -12,7 +12,7 @@ import { initDb, getSetting, setSetting } from "./src/db";
 
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+function TabIcon({ label, focused }: Readonly<{ label: string; focused: boolean }>) {
   const icons: Record<string, { name: string; focusedName: string }> = {
     Dashboard: { name: "home-outline", focusedName: "home" },
     Calendar: { name: "calendar-outline", focusedName: "calendar" },

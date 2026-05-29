@@ -21,7 +21,7 @@ export default function SettingsScreen() {
     useCallback(() => {
       initDb().then(async () => {
         const t = await getSetting("targetPct");
-        if (t) setTargetPct(parseInt(t, 10));
+        if (t) setTargetPct(Number.parseInt(t, 10));
 
       });
     }, [])
