@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "InOffice — Track Your Office Days",
+    "name": "InOffice",
     "slug": "inoffice",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,6 +16,7 @@
       "bundleIdentifier": "com.rsivanandan.inoffice",
       "buildNumber": "1",
       "infoPlist": {
+        "CFBundleDisplayName": "InOffice",
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSPhotoLibraryUsageDescription": "Used to import attendance data from Excel files."
       }
