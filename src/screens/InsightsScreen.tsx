@@ -1,95 +1,12 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  format,
-} from "date-fns";
+import { format } from "date-fns";
 import { getAllDays, initDb } from "../db";
-import type { DayRecord, MonthStats } from "../types";
+import type { MonthStats } from "../types";
+import { calcMonthStats } from "../utils/stats";
 
-function isWorkingDay(d: Date): boolean {
-  const dow = d.getDay();
-  return dow >= 1 && dow <= 5;
-}
-
-function calcMonthStats(
-  year: number,
-  month: number,
-  records: DayRecord[]
-): MonthStats {
-  const start = startOfMonth(new Date(year, month - 1));
-  const end = endOfMonth(new Date(year, month - 1));
-  const allDays = eachDayOfInterval({ start, end });
-
-  const recordMap = new Map(records.map((r) => [r.date, r.status]));
-
-  const totalWorkingDays = allDays.filter(isWorkingDay).length;
-
-  let inOfficeDays = 0;
-  let leaveDays = 0;
-
-  for (const d of allDays) {
-    if (!isWorkingDay(d)) continue;
-    const key = format(d, "yyyy-MM-dd");
-    const status = recordMap.get(key) ?? "absent";
-    if (status === "in-office") inOfficeDays++;
-    if (
-      status === "public-holiday" ||
-      status === "personal-leave" ||
-      status === "sick-leave"
-    )
-      leaveDays++;
-  }
-
-  const netWorkingDays = totalWorkingDays - leaveDays;
-  const inOfficePct =
-    totalWorkingDays > 0
-      ? Math.round((inOfficeDays / totalWorkingDays) * 100)
-      : 0;
-  const netInOfficePct =
-    netWorkingDays > 0
-      ? Math.round((inOfficeDays / netWorkingDays) * 100)
-      : 0;
-
-  return {
-    totalWorkingDays,
-    inOfficeDays,
-    leaveDays,
-    inOfficePct,
-    netWorkingDays,
-    netInOfficePct,
-  };
-}
-
-function StatItem({
-  label,
-  value,
-  color,
-}: Readonly<{
-  label: string;
-  value: number;
-  color?: string;
-}>) {
-  return (
-    <View style={{ alignItems: "center" }}>
-      <Text
-        style={{
-          fontSize: 22,
-          fontWeight: "700",
-          color: color ?? "#111827",
-        }}
-      >
-        {value}
-      </Text>
-      <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
+import StatItem from "../components/StatItem";
 
 function StatCard({
   title,
@@ -164,34 +81,18 @@ function MonthBreakdownCard({
       </Text>
 
       <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 28, fontWeight: "800", color }}>
-            {pct}%
-          </Text>
-          <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-            {excludeLeaves ? "Excl." : "Incl."}
-          </Text>
-        </View>
-
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ fontSize: 22, fontWeight: "700", color: "#f8fafc" }}>
-            {s.inOfficeDays}/{excludeLeaves ? s.netWorkingDays : s.totalWorkingDays}
-          </Text>
-          <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-            In / Work
-          </Text>
-        </View>
-
-        {excludeLeaves && (
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: 22, fontWeight: "700", color: "#f59e0b" }}>
-              {s.leaveDays}
-            </Text>
-            <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-              Leaves
-            </Text>
-          </View>
-        )}
+        <StatItem
+          label={excludeLeaves ? "Excl." : "Incl."}
+          value={`${pct}%`}
+          color={color}
+          valueSize={28}
+        />
+        <StatItem
+          label="In / Work"
+          value={`${s.inOfficeDays}/${excludeLeaves ? s.netWorkingDays : s.totalWorkingDays}`}
+          color="#f8fafc"
+        />
+        {excludeLeaves && <StatItem label="Leaves" value={s.leaveDays} color="#f59e0b" />}
       </View>
     </View>
   );

@@ -12,6 +12,33 @@ const LEGEND: { label: string; color: string; desc: string }[] = [
   { label: "Sick Leave", color: "#ef4444", desc: "Unplanned sick day" },
 ];
 
+function ActionRow({
+  label,
+  description,
+  color,
+  onPress,
+  border = true,
+}: Readonly<{
+  label: string;
+  description: string;
+  color: string;
+  onPress: () => void;
+  border?: boolean;
+}>) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        paddingVertical: 12,
+        ...(border ? { borderBottomWidth: 1, borderBottomColor: "#334155" } : {}),
+      }}
+    >
+      <Text style={{ fontSize: 14, fontWeight: "600", color }}>{label}</Text>
+      <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{description}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function SettingsScreen() {
   const [targetPct, setTargetPct] = useState(60);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -93,43 +120,20 @@ export default function SettingsScreen() {
         <Text style={{ fontSize: 15, fontWeight: "600", color: "#94a3b8", marginBottom: 12 }}>
           Import / Export
         </Text>
-        <TouchableOpacity
-          onPress={async () => {
-            try {
-              await exportToExcel();
-            } catch {
-              Alert.alert("Error", "Could not export data.");
-            }
-          }}
-          style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#334155" }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#3b82f6" }}>
-            Export to Excel
-          </Text>
-          <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-            Shares .xlsx file with all attendance records
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={async () => {
-            try {
-              const count = await importFromExcel();
-              if (count > 0) {
-                Alert.alert("Imported", `${count} records imported or updated.`);
-              }
-            } catch {
-              Alert.alert("Error", "Could not import file. Make sure it's a valid .xlsx file with Date and Status columns.");
-            }
-          }}
-          style={{ paddingVertical: 12 }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#3b82f6" }}>
-            Import from Excel
-          </Text>
-          <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-            Pick a .xlsx file to import attendance records
-          </Text>
-        </TouchableOpacity>
+        <ActionRow
+          label="Export to Excel"
+          description="Shares .xlsx file with all attendance records"
+          color="#3b82f6"
+          onPress={async () => { try { await exportToExcel(); } catch { Alert.alert("Error", "Could not export data."); } }}
+          border
+        />
+        <ActionRow
+          label="Import from Excel"
+          description="Pick a .xlsx file to import attendance records"
+          color="#3b82f6"
+          onPress={async () => { try { const count = await importFromExcel(); if (count > 0) Alert.alert("Imported", `${count} records imported or updated.`); } catch { Alert.alert("Error", "Could not import file. Make sure it's a valid .xlsx file with Date and Status columns."); } }}
+          border={false}
+        />
         <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
           <TouchableOpacity
             onPress={() =>
@@ -171,41 +175,20 @@ export default function SettingsScreen() {
         <Text style={{ fontSize: 15, fontWeight: "600", color: "#94a3b8", marginBottom: 12 }}>
           Backup / Restore
         </Text>
-        <TouchableOpacity
-          onPress={async () => {
-            try {
-              await backupDatabase();
-            } catch {
-              Alert.alert("Error", "Could not backup database.");
-            }
-          }}
-          style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#334155" }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#3b82f6" }}>
-            Backup Database
-          </Text>
-          <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-            Share a copy of your entire database
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={async () => {
-            try {
-              await restoreDatabase();
-              Alert.alert("Restored", "Database restored from backup.");
-            } catch {
-              Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file.");
-            }
-          }}
-          style={{ paddingVertical: 12 }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#f59e0b" }}>
-            Restore Database
-          </Text>
-          <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-            Pick a .db backup file to restore from
-          </Text>
-        </TouchableOpacity>
+        <ActionRow
+          label="Backup Database"
+          description="Share a copy of your entire database"
+          color="#3b82f6"
+          onPress={async () => { try { await backupDatabase(); } catch { Alert.alert("Error", "Could not backup database."); } }}
+          border
+        />
+        <ActionRow
+          label="Restore Database"
+          description="Pick a .db backup file to restore from"
+          color="#f59e0b"
+          onPress={async () => { try { await restoreDatabase(); Alert.alert("Restored", "Database restored from backup."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
+          border={false}
+        />
       </View>
 
       <View style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#334155", marginTop: 20, marginBottom: 24 }}>

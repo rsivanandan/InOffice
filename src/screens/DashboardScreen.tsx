@@ -1,73 +1,17 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { format, isFuture, isToday, endOfMonth, eachDayOfInterval, startOfMonth } from "date-fns";
+import { format, isFuture, isToday, endOfMonth, eachDayOfInterval } from "date-fns";
 import type { MonthStats, DayRecord } from "../types";
 import { getSetting, getDay, getAllDays, setDayStatus, initDb } from "../db";
-
-function isWorkingDay(d: Date): boolean {
-  const dow = d.getDay();
-  return dow >= 1 && dow <= 5;
-}
-
-function calcMonthStats(
-  year: number,
-  month: number,
-  records: DayRecord[]
-): MonthStats {
-  const start = startOfMonth(new Date(year, month - 1));
-  const end = endOfMonth(new Date(year, month - 1));
-  const allDays = eachDayOfInterval({ start, end });
-
-  const recordMap = new Map(records.map((r) => [r.date, r.status]));
-
-  const totalWorkingDays = allDays.filter(isWorkingDay).length;
-
-  let inOfficeDays = 0;
-  let leaveDays = 0;
-
-  for (const d of allDays) {
-    if (!isWorkingDay(d)) continue;
-    const key = format(d, "yyyy-MM-dd");
-    const status = recordMap.get(key) ?? "absent";
-    if (status === "in-office") inOfficeDays++;
-    if (
-      status === "public-holiday" ||
-      status === "personal-leave" ||
-      status === "sick-leave"
-    )
-      leaveDays++;
-  }
-
-  const netWorkingDays = totalWorkingDays - leaveDays;
-  const inOfficePct =
-    totalWorkingDays > 0
-      ? Math.round((inOfficeDays / totalWorkingDays) * 100)
-      : 0;
-  const netInOfficePct =
-    netWorkingDays > 0
-      ? Math.round((inOfficeDays / netWorkingDays) * 100)
-      : 0;
-
-  return {
-    totalWorkingDays,
-    inOfficeDays,
-    leaveDays,
-    inOfficePct,
-    netWorkingDays,
-    netInOfficePct,
-  };
-}
+import { isWorkingDay, calcMonthStats, getPlural } from "../utils/stats";
+import StatItem from "../components/StatItem";
 
 function getGreeting(hour: number): string {
   if (hour < 12) return "morning";
   if (hour < 17) return "afternoon";
   if (hour < 21) return "evening";
   return "night";
-}
-
-function getPlural(n: number): string {
-  return n === 1 ? "" : "s";
 }
 
 function getPct(stats: MonthStats | null, excludeLeaves: boolean): number {
@@ -402,40 +346,19 @@ export default function DashboardScreen() {
             Year to Date — {format(now, "yyyy")}
           </Text>
           <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: excludeLeaves ? "#22c55e" : "#3b82f6" }}>
-                {excludeLeaves ? ytdStats.netInOfficePct : ytdStats.inOfficePct}%
-              </Text>
-              <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                {excludeLeaves ? "Excl." : "Incl."}
-              </Text>
-            </View>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 22, fontWeight: "700", color: "#f8fafc" }}>
-                {ytdStats.inOfficeDays}
-              </Text>
-              <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                In office
-              </Text>
-            </View>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 22, fontWeight: "700", color: "#f8fafc" }}>
-                {excludeLeaves ? ytdStats.netWorkingDays : ytdStats.totalWorkingDays}
-              </Text>
-              <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                Working days
-              </Text>
-            </View>
-            {excludeLeaves && (
-              <View style={{ alignItems: "center" }}>
-                <Text style={{ fontSize: 22, fontWeight: "700", color: "#f59e0b" }}>
-                  {ytdStats.leaveDays}
-                </Text>
-                <Text style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
-                  Leaves
-                </Text>
-              </View>
-            )}
+            <StatItem
+              label={excludeLeaves ? "Excl." : "Incl."}
+              value={`${excludeLeaves ? ytdStats.netInOfficePct : ytdStats.inOfficePct}%`}
+              color={excludeLeaves ? "#22c55e" : "#3b82f6"}
+              valueSize={28}
+            />
+            <StatItem label="In office" value={ytdStats.inOfficeDays} color="#f8fafc" />
+            <StatItem
+              label="Working days"
+              value={excludeLeaves ? ytdStats.netWorkingDays : ytdStats.totalWorkingDays}
+              color="#f8fafc"
+            />
+            {excludeLeaves && <StatItem label="Leaves" value={ytdStats.leaveDays} color="#f59e0b" />}
           </View>
         </View>
       )}

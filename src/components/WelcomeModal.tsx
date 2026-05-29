@@ -14,6 +14,15 @@ interface Props {
   onDismiss: (name: string) => void;
 }
 
+function StepItem({ num, text }: Readonly<{ num: string; text: string }>) {
+  return (
+    <View style={{ flexDirection: "row", marginBottom: 12, alignItems: "flex-start" }}>
+      <Text style={{ color: "#3b82f6", fontWeight: "700", marginRight: 12, fontSize: 14 }}>{num}</Text>
+      <Text style={{ color: "#cbd5e1", fontSize: 14, flex: 1, lineHeight: 20 }}>{text}</Text>
+    </View>
+  );
+}
+
 export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
   const [name, setName] = useState("");
   return (
@@ -32,26 +41,9 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
               HOW IT WORKS
             </Text>
 
-            <View style={{ flexDirection: "row", marginBottom: 12, alignItems: "flex-start" }}>
-              <Text style={{ color: "#3b82f6", fontWeight: "700", marginRight: 12, fontSize: 14 }}>01</Text>
-              <Text style={{ color: "#cbd5e1", fontSize: 14, flex: 1, lineHeight: 20 }}>
-                Tap any day to open the status picker and choose how your day went
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", marginBottom: 12, alignItems: "flex-start" }}>
-              <Text style={{ color: "#3b82f6", fontWeight: "700", marginRight: 12, fontSize: 14 }}>02</Text>
-              <Text style={{ color: "#cbd5e1", fontSize: 14, flex: 1, lineHeight: 20 }}>
-                Long-press a day to quickly toggle In Office / Absent
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <Text style={{ color: "#3b82f6", fontWeight: "700", marginRight: 12, fontSize: 14 }}>03</Text>
-              <Text style={{ color: "#cbd5e1", fontSize: 14, flex: 1, lineHeight: 20 }}>
-                Set your attendance target in Settings and track progress on the Dashboard
-              </Text>
-            </View>
+            <StepItem num="01" text="Tap any day to open the status picker and choose how your day went" />
+            <StepItem num="02" text="Long-press a day to quickly toggle In Office / Absent" />
+            <StepItem num="03" text="Set your attendance target in Settings and track progress on the Dashboard" />
           </View>
 
           <View style={{ marginTop: 24, backgroundColor: "#1e293b", borderRadius: 16, padding: 24 }}>
