@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "appleId": "",
+  "bundleIdentifier": "com.rsivanandan.inoffice",
+  "appName": "InOffice — Track Your Office Days",
+  "subtitle": "Track your office attendance",
+  "primaryCategory": "BUSINESS",
+  "secondaryCategory": "PRODUCTIVITY",
+  "description": "Track your in-office attendance effortlessly. Mark days as in-office, absent, public holiday, personal leave, or sick leave. View monthly insights with exclusive and inclusive percentage tracking. Export your attendance data to Excel for reporting.",
+  "keywords": ["office", "attendance", "tracking", "RTO", "return to office", "work", "productivity"],
+  "supportUrl": "https://rsivanandan.com/inoffice",
+  "marketingUrl": "",
+  "privacyUrl": "https://rsivanandan.com/inoffice/privacy",
+  "copyright": "2026 Rajesh T Sivanandan",
+  "reviewEmail": "",
+  "demoUser": "",
+  "demoPassword": ""
+}
