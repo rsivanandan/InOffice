@@ -2,7 +2,11 @@
 
 ## Project
 
-React Native (Expo SDK 56) app for tracking office attendance.
+React Native (Expo SDK 56) app for tracking office attendance. This app is for both IOS and Android.
+
+## KEY INSIGHTS
+
+Before making any changes, ensure that it works for both IOS and Android. DO NOT break one for the other.
 
 ```
 npx expo start       # dev server
@@ -21,13 +25,13 @@ sonar-scanner         # analyze with SonarQube (needs SONAR_TOKEN)
 
 ## Architecture
 
-| Path | Purpose |
-|------|---------|
-| `App.tsx` | Entry — bottom tab navigator (Calendar, Insights) |
-| `src/screens/` | Screen components |
-| `src/components/` | MonthGrid, DayCell, StatusPicker |
-| `src/db/` | SQLite (expo-sqlite) — days table `(date TEXT PK, status TEXT)` |
-| `src/types/` | `DayStatus` & `MonthStats` types |
+| Path              | Purpose                                                         |
+| ----------------- | --------------------------------------------------------------- |
+| `App.tsx`         | Entry — bottom tab navigator (Calendar, Insights)               |
+| `src/screens/`    | Screen components                                               |
+| `src/components/` | MonthGrid, DayCell, StatusPicker                                |
+| `src/db/`         | SQLite (expo-sqlite) — days table `(date TEXT PK, status TEXT)` |
+| `src/types/`      | `DayStatus` & `MonthStats` types                                |
 
 ## Key facts
 
@@ -79,13 +83,13 @@ eas build:configure                # configure credentials (first time)
 
 ### Play Store listing
 
-| Item | Path / Note |
-|------|-------------|
-| Metadata | `store/android/metadata.json` |
-| Privacy policy | `store/privacy-policy.md` (host at `https://rsivanandan.com/inoffice/privacy`) |
-| Screenshots | `store/android/screenshots/` (phone screenshots, at least 2) |
-| Developer email | Set to `rsivanandan@gmail.com` in metadata |
-| App signing | Keystore at `android/app/inoffice-release.keystore` (keep safe!) |
+| Item            | Path / Note                                                                    |
+| --------------- | ------------------------------------------------------------------------------ |
+| Metadata        | `store/android/metadata.json`                                                  |
+| Privacy policy  | `store/privacy-policy.md` (host at `https://rsivanandan.com/inoffice/privacy`) |
+| Screenshots     | `store/android/screenshots/` (phone screenshots, at least 2)                   |
+| Developer email | Set to `rsivanandan@gmail.com` in metadata                                     |
+| App signing     | Keystore at `android/app/inoffice-release.keystore` (keep safe!)               |
 
 ## Important constraints
 

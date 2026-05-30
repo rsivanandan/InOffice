@@ -155,14 +155,15 @@ export async function importFromExcel(): Promise<number> {
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) return 0;
 
-  const data = XLSX.utils.sheet_to_json<{ Date: string; Status: string }>(ws);
+  const data = XLSX.utils.sheet_to_json<{ Date: string | number; Status: string }>(ws, { raw: false });
   let count = 0;
   for (const row of data) {
     const status = row.Status?.trim().toLowerCase();
-    if (row.Date && status && VALID_STATUSES.has(status as DayStatus)) {
+    const dateStr = String(row.Date ?? "").replace(/\//g, "-");
+    if (dateStr && status && VALID_STATUSES.has(status as DayStatus)) {
       await db.runAsync(
         "INSERT OR REPLACE INTO days (date, status) VALUES (?, ?)",
-        [row.Date, status]
+        [dateStr, status]
       );
       count++;
     }
