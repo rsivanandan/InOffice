@@ -14,7 +14,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rsivanandan.inoffice",
-      "buildNumber": "1",
+      "buildNumber": "2",
+      "developmentTeam": "5VH4G3NV7W",
       "infoPlist": {
         "CFBundleDisplayName": "InOffice",
         "NSCameraUsageDescription": "This app does not use the camera.",
