@@ -27,7 +27,7 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
   const [name, setName] = useState("");
   return (
     <Modal visible={visible} transparent={false} animationType="fade">
-      <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: 80, paddingBottom: 40, ...(Platform.OS !== "android" ? { paddingHorizontal: 32 } : {}) }}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: 80, paddingBottom: 40, ...(Platform.OS === "ios" ? { paddingHorizontal: 32 } : {}) }}>
         <ScrollView style={{ flex: 1, ...(Platform.OS === "android" ? { paddingHorizontal: 32 } : {}) }} contentContainerStyle={{ paddingBottom: 24 }}>
           <Text style={{ fontSize: 42, fontWeight: "900", color: "#ffffff", letterSpacing: -1 }}>
             InOffice
