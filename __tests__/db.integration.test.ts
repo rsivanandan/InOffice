@@ -340,9 +340,7 @@ describe("DB module (mocked)", () => {
       const result = await restoreDatabase();
 
       expect(result).toBe(false);
-      expect(fsMocks.__mockPickFileAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ mimeTypes: ["*/*"] })
-      );
+      expect(fsMocks.__mockPickFileAsync).toHaveBeenCalledWith();
     });
 
     it("restoreDatabase returns false when picker returns no result", async () => {

@@ -84,7 +84,7 @@ export async function backupDatabase(): Promise<void> {
 
 export async function restoreDatabase(): Promise<boolean> {
   await initDb();
-  const result = await File.pickFileAsync({ mimeTypes: ["*/*"] });
+  const result = await File.pickFileAsync();
   if (result.canceled || !result.result) return false;
 
   const content = await result.result.bytes();

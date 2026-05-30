@@ -195,7 +195,7 @@ export default function SettingsScreen() {
           label="Restore Database"
           description="Pick a .db backup file to restore from"
           color="#f59e0b"
-          onPress={async () => { try { const ok = await restoreDatabase(); if (ok) Alert.alert("Restored", "Database restored from backup."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
+          onPress={async () => { try { const ok = await restoreDatabase(); if (ok) Alert.alert("Restored", "Database restored from backup."); else Alert.alert("Canceled", "No file was selected."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
           border={false}
         />
       </View>
