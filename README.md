@@ -6,6 +6,12 @@ React Native (Expo SDK 56) app for tracking office attendance days. Data stored 
 
 Before making any changes, it should ensure that nothing breaks on both IOS or Android.
 
+## Git Workflow
+
+- All development on `development` branch
+- Only merge to `master` for releases
+- Commit messages: descriptive, imperative mood
+
 ## Tech Stack
 
 | Layer        | Choice                                                     |
@@ -70,6 +76,23 @@ src/utils/
 ## Backup & Restore
 
 Backup and restore use SQL-level operations (`serializeDatabaseAsync` / `deserializeDatabaseAsync` + `backupDatabaseAsync`) instead of file I/O, making them reliable across both Android and iOS.
+
+## Excel Import / Export
+
+### Export
+Exports all attendance data to an `.xlsx` file with columns `Date`, `Status`, shared via the system share sheet.
+
+### Import
+Imports attendance from an `.xlsx` file. Expected columns: `Date`, `Status`. The import handler:
+- Accepts dates in `YYYY-MM-DD` or `YYYY/MM/DD` format
+- Accepts Excel serial date numbers (auto-converted to string via `{ raw: false }`)
+- Normalizes `/` separators to `-` for consistent storage
+- Validates statuses against the allowed set (`in-office`, `absent`, `public-holiday`, `personal-leave`, `sick-leave`)
+- Skips rows with missing or invalid data
+- Uses `INSERT OR REPLACE` — re-importing overwrites existing entries
+
+### Sample
+A sample Excel file with example data can be downloaded via the Settings screen.
 
 ## Build — Android
 
