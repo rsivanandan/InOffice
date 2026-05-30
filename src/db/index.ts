@@ -1,13 +1,14 @@
 import * as SQLite from "expo-sqlite";
 import { Paths, File } from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import * as DocumentPicker from "expo-document-picker";
+
 import * as XLSX from "xlsx";
 import type { DayRecord, DayStatus } from "../types";
 
 let db: SQLite.SQLiteDatabase;
 
 export async function initDb() {
+  try { await db?.closeAsync(); } catch {}
   db = await SQLite.openDatabaseAsync("rto.db");
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS days (
@@ -73,11 +74,9 @@ export async function deleteAllData() {
 }
 
 export async function backupDatabase(): Promise<void> {
-  await initDb();
-  const src = new File(db.databasePath);
-  const content = await src.base64();
+  const backupData = await db.serializeAsync();
   const backup = new File(Paths.cache, "rto-backup.db");
-  backup.write(content, { encoding: "base64" });
+  backup.write(backupData);
   await Sharing.shareAsync(backup.uri, {
     mimeType: "application/octet-stream",
   });
@@ -85,17 +84,17 @@ export async function backupDatabase(): Promise<void> {
 
 export async function restoreDatabase(): Promise<boolean> {
   await initDb();
-  const result = await File.pickFileAsync({
-    mimeTypes: ["*/*"],
+  const result = await File.pickFileAsync({ mimeTypes: ["*/*"] });
+  if (result.canceled || !result.result) return false;
+
+  const content = await result.result.bytes();
+
+  const memDb = await SQLite.deserializeDatabaseAsync(content);
+  await SQLite.backupDatabaseAsync({
+    sourceDatabase: memDb,
+    destDatabase: db,
   });
-  if (result.canceled) return false;
-  const picked = result.result;
-  const content = await picked.base64();
-  const dbPath = db.databasePath;
-  await db.closeAsync();
-  const dbFile = new File(dbPath);
-  dbFile.write(content, { encoding: "base64" });
-  await initDb();
+
   return true;
 }
 
@@ -144,15 +143,15 @@ export async function downloadSampleExcel() {
 }
 
 export async function importFromExcel(): Promise<number> {
-  const result = await DocumentPicker.getDocumentAsync({
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  const result = await File.pickFileAsync({
+    mimeTypes: [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ],
   });
-  if (result.canceled || !result.assets?.length) return 0;
+  if (result.canceled || !result.result) return 0;
 
-  const picked = result.assets[0];
-  const file = new File(picked.uri);
-  const content = await file.base64();
-  const wb = XLSX.read(content, { type: "base64" });
+  const content = await result.result.bytes();
+  const wb = XLSX.read(content, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
   if (!ws) return 0;
 

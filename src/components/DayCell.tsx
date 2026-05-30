@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { TouchableOpacity, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { DayStatus } from "../types";
 
 const OOO_COLORS: Record<DayStatus, string> = {
@@ -89,10 +89,10 @@ const DayCell = memo(function DayCell({
   const tileMarginTop = letter ? 1 : 3;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={() => onPress(dateKey)}
       onLongPress={() => onLongPress(dateKey)}
-      style={{
+      style={({ pressed }) => ({
         flex: 1,
         margin: 1,
         borderRadius: 8,
@@ -101,8 +101,8 @@ const DayCell = memo(function DayCell({
         borderColor,
         alignItems: "center",
         justifyContent: "center",
-        opacity,
-      }}
+        opacity: pressed ? 0.7 : opacity,
+      })}
     >
       <Text style={{ fontSize: 17, fontWeight, color: textColor }}>
         {day}
@@ -125,7 +125,7 @@ const DayCell = memo(function DayCell({
           }}
         />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 

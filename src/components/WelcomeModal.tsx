@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, ScrollView, Platform } from "react-native";
 
 const LEGEND = [
   { label: "In Office", color: "#22c55e" },
@@ -27,8 +27,8 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
   const [name, setName] = useState("");
   return (
     <Modal visible={visible} transparent={false} animationType="fade">
-      <View style={{ flex: 1, backgroundColor: "#0f172a", paddingHorizontal: 32, paddingTop: 80, paddingBottom: 40 }}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: 80, paddingBottom: 40, ...(Platform.OS !== "android" ? { paddingHorizontal: 32 } : {}) }}>
+        <ScrollView style={{ flex: 1, ...(Platform.OS === "android" ? { paddingHorizontal: 32 } : {}) }} contentContainerStyle={{ paddingBottom: 24 }}>
           <Text style={{ fontSize: 42, fontWeight: "900", color: "#ffffff", letterSpacing: -1 }}>
             InOffice
           </Text>
@@ -92,14 +92,14 @@ export default function WelcomeModal({ visible, onDismiss }: Readonly<Props>) {
 
         <TouchableOpacity
           onPress={() => onDismiss(name.trim())}
-          style={{ backgroundColor: "#3b82f6", paddingVertical: 16, borderRadius: 12, alignItems: "center" }}
+          style={{ backgroundColor: "#3b82f6", paddingVertical: 16, borderRadius: 12, alignItems: "center", ...(Platform.OS === "android" ? { marginHorizontal: 32 } : {}) }}
         >
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
             Get Started
           </Text>
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 11, color: "#475569", textAlign: "center", marginTop: 16 }}>
+        <Text style={{ fontSize: 11, color: "#475569", textAlign: "center", marginTop: 16, ...(Platform.OS === "android" ? { marginHorizontal: 32 } : {}) }}>
           © {new Date().getFullYear()} Rajesh T Sivanandan. All rights reserved.
         </Text>
       </View>

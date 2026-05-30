@@ -1,5 +1,5 @@
 import { useState, memo, useEffect, useRef, useContext } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Platform } from "react-native";
 import { TabIndexContext } from "../utils/TabIndexContext";
 import { format, isFuture, isToday, endOfMonth, eachDayOfInterval } from "date-fns";
 import type { MonthStats, DayRecord } from "../types";
@@ -271,7 +271,7 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#0f172a" }} contentContainerStyle={{ paddingBottom: 160 }}>
-      <Text style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4, fontSize: 11, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
+      <Text style={{ paddingHorizontal: 20, paddingTop: Platform.OS === "android" ? 9 : 8, paddingBottom: 4, fontSize: 11, fontWeight: "500", color: "#64748b", letterSpacing: 1, textTransform: "uppercase" }}>
         {format(now, "EEEE, MMMM d")}
       </Text>
 

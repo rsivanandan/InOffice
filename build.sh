@@ -5,6 +5,7 @@ usage() {
   echo "Usage: $0 {android-local|ios-eas|ios-eas-preview|all}"
   echo ""
   echo "  android-local     Build Android locally via Gradle (APK)"
+  echo "  android-eas       Build Android via EAS Build (AAB for Play Store)"
   echo "  ios-eas           Build iOS via EAS Build (Production)"
   echo "  ios-eas-preview   Build iOS via EAS Build (Internal)"
   echo "  all               Run tests, then android-local + ios-eas"
@@ -20,22 +21,33 @@ fi
 case "$CMD" in
   android-local)
     echo "=== Running tests ==="
-    npx jest --selectProjects "Unit Tests"
+    npx jest
     echo ""
     echo "=== Prebuilding native project ==="
     npx expo prebuild --platform android --clean
     echo ""
+    echo "=== Configuring release signing ==="
+    bash scripts/patch-android-signing.sh
+    echo ""
     echo "=== Building Android APK (Release) ==="
     cd android
-    ./gradlew assembleRelease
+    JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=$HOME/Library/Android/sdk ./gradlew assembleRelease
     cd ..
     echo ""
     echo "✅ APK at: android/app/build/outputs/apk/release/app-release.apk"
     ;;
 
+  android-eas)
+    echo "=== Running tests ==="
+    npx jest
+    echo ""
+    echo "=== Building Android via EAS (AAB for Play Store) ==="
+    eas build --platform android --profile production --non-interactive
+    ;;
+
   ios-eas)
     echo "=== Running tests ==="
-    npx jest --selectProjects "Unit Tests"
+    npx jest
     echo ""
     echo "=== Building iOS via EAS (Production) ==="
     eas build --platform ios --profile production --non-interactive
@@ -43,7 +55,7 @@ case "$CMD" in
 
   ios-eas-preview)
     echo "=== Running tests ==="
-    npx jest --selectProjects "Unit Tests"
+    npx jest
     echo ""
     echo "=== Building iOS via EAS (Preview) ==="
     eas build --platform ios --profile preview --non-interactive

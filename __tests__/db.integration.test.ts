@@ -7,6 +7,10 @@ jest.mock("expo-sqlite", () => {
   const mockGetFirstAsync = jest.fn();
   const mockGetAllAsync = jest.fn();
   const mockExecAsync = jest.fn();
+  const mockSerializeAsync = jest.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
+  const mockCloseAsync = jest.fn();
+  const mockDeserializeAsync = jest.fn().mockResolvedValue({ name: ":memory:" });
+  const mockBackupAsync = jest.fn();
 
   return {
     openDatabaseAsync: jest.fn(async () => ({
@@ -14,14 +18,20 @@ jest.mock("expo-sqlite", () => {
       getFirstAsync: mockGetFirstAsync,
       getAllAsync: mockGetAllAsync,
       execAsync: mockExecAsync,
-      closeAsync: jest.fn(),
+      serializeAsync: mockSerializeAsync,
+      closeAsync: mockCloseAsync,
       databasePath: "file:///mock/rto.db",
     })),
+    deserializeDatabaseAsync: mockDeserializeAsync,
+    backupDatabaseAsync: mockBackupAsync,
     SQLiteDatabase: {},
     __mockRunAsync: mockRunAsync,
     __mockGetFirstAsync: mockGetFirstAsync,
     __mockGetAllAsync: mockGetAllAsync,
     __mockExecAsync: mockExecAsync,
+    __mockCloseAsync: mockCloseAsync,
+    __mockDeserializeAsync: mockDeserializeAsync,
+    __mockBackupAsync: mockBackupAsync,
   };
 });
 
@@ -29,15 +39,16 @@ jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-let mockBase64Result = "";
+let mockFileBytes = new Uint8Array([1, 2, 3, 4]);
 
 jest.mock("expo-file-system", () => {
   const mockWrite = jest.fn();
   const mockPickFileAsync = jest.fn();
+  const mockBytes = jest.fn().mockImplementation(async () => mockFileBytes);
   const File = jest.fn().mockImplementation((...args) => ({
     write: mockWrite,
     uri: args.length === 1 ? args[0] : `${args[0]}/${args[1]}`,
-    base64: jest.fn().mockImplementation(async () => mockBase64Result),
+    bytes: mockBytes,
   }));
   File.pickFileAsync = mockPickFileAsync;
   return {
@@ -45,12 +56,9 @@ jest.mock("expo-file-system", () => {
     File,
     __mockWrite: mockWrite,
     __mockPickFileAsync: mockPickFileAsync,
+    __mockBytes: mockBytes,
   };
 });
-
-jest.mock("expo-document-picker", () => ({
-  getDocumentAsync: jest.fn(),
-}));
 
 const {
   initDb,
@@ -74,6 +82,9 @@ const mocks = SQLite as unknown as {
   __mockGetFirstAsync: jest.Mock;
   __mockGetAllAsync: jest.Mock;
   __mockExecAsync: jest.Mock;
+  __mockCloseAsync: jest.Mock;
+  __mockDeserializeAsync: jest.Mock;
+  __mockBackupAsync: jest.Mock;
 };
 
 const fsMocks = require("expo-file-system") as unknown as {
@@ -224,42 +235,37 @@ describe("DB module (mocked)", () => {
   });
 
   describe("Excel import", () => {
-    const docPicker = require("expo-document-picker") as {
-      getDocumentAsync: jest.Mock;
-    };
-
-    function makeXlsxBase64(rows: { date: string; status: string }[]): string {
+    function makeXlsxBytes(rows: { date: string; status: string }[]): Uint8Array {
       const wb = XLSX.utils.book_new();
       const data = rows.length
         ? [["Date", "Status"], ...rows.map((r) => [r.date, r.status])]
         : [];
       const ws = XLSX.utils.aoa_to_sheet(data);
       XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-      return XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as unknown as Uint8Array;
     }
 
     beforeEach(() => {
       jest.clearAllMocks();
-      mockBase64Result = "";
+      mockFileBytes = new Uint8Array([1, 2, 3, 4]);
     });
 
     it("importFromExcel returns 0 when canceled", async () => {
-      docPicker.getDocumentAsync.mockResolvedValueOnce({ canceled: true });
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({ canceled: true });
 
       const result = await importFromExcel();
       expect(result).toBe(0);
     });
 
     it("importFromExcel inserts valid rows", async () => {
-      docPicker.getDocumentAsync.mockResolvedValueOnce({
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
         canceled: false,
-        assets: [{ uri: "file:///picked/test.xlsx" }],
+        result: { bytes: () => makeXlsxBytes([
+          { date: "2026-06-01", status: "in-office" },
+          { date: "2026-06-02", status: "absent" },
+          { date: "2026-06-03", status: "public-holiday" },
+        ])},
       });
-      mockBase64Result = makeXlsxBase64([
-        { date: "2026-06-01", status: "in-office" },
-        { date: "2026-06-02", status: "absent" },
-        { date: "2026-06-03", status: "public-holiday" },
-      ]);
 
       const result = await importFromExcel();
       expect(result).toBe(3);
@@ -271,16 +277,15 @@ describe("DB module (mocked)", () => {
     });
 
     it("importFromExcel skips invalid rows", async () => {
-      docPicker.getDocumentAsync.mockResolvedValueOnce({
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
         canceled: false,
-        assets: [{ uri: "file:///picked/test.xlsx" }],
+        result: { bytes: () => makeXlsxBytes([
+          { date: "2026-06-01", status: "in-office" },
+          { date: "", status: "absent" },
+          { date: "2026-06-03", status: "invalid-status" },
+          { date: "2026-06-05", status: "sick-leave" },
+        ])},
       });
-      mockBase64Result = makeXlsxBase64([
-        { date: "2026-06-01", status: "in-office" },
-        { date: "", status: "absent" },
-        { date: "2026-06-03", status: "invalid-status" },
-        { date: "2026-06-05", status: "sick-leave" },
-      ]);
 
       const result = await importFromExcel();
       expect(result).toBe(2);
@@ -288,11 +293,10 @@ describe("DB module (mocked)", () => {
     });
 
     it("importFromExcel returns 0 for empty sheet", async () => {
-      docPicker.getDocumentAsync.mockResolvedValueOnce({
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
         canceled: false,
-        assets: [{ uri: "file:///picked/test.xlsx" }],
+        result: { bytes: () => makeXlsxBytes([]) },
       });
-      mockBase64Result = makeXlsxBase64([]);
 
       const result = await importFromExcel();
       expect(result).toBe(0);
@@ -300,15 +304,14 @@ describe("DB module (mocked)", () => {
     });
 
     it("importFromExcel returns 0 when sheet is missing", async () => {
-      docPicker.getDocumentAsync.mockResolvedValueOnce({
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
         canceled: false,
-        assets: [{ uri: "file:///picked/test.xlsx" }],
+        result: { bytes: () => new Uint8Array([1, 2, 3]) },
       });
       jest.spyOn(XLSX, "read").mockReturnValueOnce({
         SheetNames: ["Sheet1"],
         Sheets: {},
       });
-      mockBase64Result = "fake-base64";
 
       const result = await importFromExcel();
       expect(result).toBe(0);
@@ -324,7 +327,7 @@ describe("DB module (mocked)", () => {
     it("backupDatabase copies db and shares", async () => {
       await backupDatabase();
 
-      expect(fsMocks.__mockWrite).toHaveBeenCalled();
+      expect(fsMocks.__mockWrite).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]));
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
         "file:///cache/rto-backup.db",
         expect.objectContaining({ mimeType: "application/octet-stream" })
@@ -342,12 +345,22 @@ describe("DB module (mocked)", () => {
       );
     });
 
-    it("restoreDatabase writes picked file and returns true", async () => {
-      const mockBase64 = "b64-content";
+    it("restoreDatabase returns false when picker returns no result", async () => {
+      fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
+        canceled: false,
+        result: null,
+      });
+
+      const result = await restoreDatabase();
+
+      expect(result).toBe(false);
+    });
+
+    it("restoreDatabase restores via SQL-level copy and returns true", async () => {
       fsMocks.__mockPickFileAsync.mockResolvedValueOnce({
         canceled: false,
         result: {
-          base64: jest.fn().mockResolvedValue(mockBase64),
+          bytes: fsMocks.__mockBytes,
         },
       });
 
@@ -355,9 +368,14 @@ describe("DB module (mocked)", () => {
 
       expect(result).toBe(true);
       expect(fsMocks.__mockPickFileAsync).toHaveBeenCalled();
-      expect(fsMocks.__mockWrite).toHaveBeenCalled();
-      expect(mocks.__mockExecAsync).toHaveBeenCalledWith(
-        expect.stringContaining("CREATE TABLE IF NOT EXISTS days")
+      expect(mocks.__mockDeserializeAsync).toHaveBeenCalledWith(
+        new Uint8Array([1, 2, 3, 4])
+      );
+      expect(mocks.__mockBackupAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sourceDatabase: expect.objectContaining({ name: ":memory:" }),
+          destDatabase: expect.any(Object),
+        })
       );
     });
   });

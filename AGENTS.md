@@ -49,9 +49,24 @@ npx tsc --noEmit          # typecheck (typescript is bundled by Expo)
 ### Android (local — requires Android Studio)
 
 ```sh
+export RTO_KEYSTORE_PASSWORD="<password>"
 ./build.sh android-local           # full build (prebuild → gradle assembleRelease)
 # APK at: android/app/build/outputs/apk/release/app-release.apk
 ```
+
+Keystore: `android/app/inoffice-release.keystore` (alias: `inoffice`)
+Password via env var `RTO_KEYSTORE_PASSWORD` or Gradle property of same name.
+**Never commit the keystore or password** — they are gitignored by `/android`.
+
+### Android (EAS — AAB for Play Store)
+
+```sh
+eas login                          # log into Expo account
+eas build:configure                # configure credentials (first time)
+./build.sh android-eas             # production AAB build via EAS
+```
+
+Upload credentials and keystore to Expo when prompted during first EAS build.
 
 ### iOS (cloud via EAS — requires Expo login)
 
@@ -62,13 +77,15 @@ eas build:configure                # configure credentials (first time)
 ./build.sh ios-eas-preview         # internal test build via EAS
 ```
 
-### App Store / Play Store metadata
+### Play Store listing
 
-| Path | Purpose |
-|------|---------|
-| `store/ios/metadata.json` | App Store metadata |
-| `store/android/metadata.json` | Play Store metadata |
-| `store/privacy-policy.md` | Privacy policy for both stores |
+| Item | Path / Note |
+|------|-------------|
+| Metadata | `store/android/metadata.json` |
+| Privacy policy | `store/privacy-policy.md` (host at `https://rsivanandan.com/inoffice/privacy`) |
+| Screenshots | `store/android/screenshots/` (phone screenshots, at least 2) |
+| Developer email | Set to `rsivanandan@gmail.com` in metadata |
+| App signing | Keystore at `android/app/inoffice-release.keystore` (keep safe!) |
 
 ## Important constraints
 

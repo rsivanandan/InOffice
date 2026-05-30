@@ -43,5 +43,9 @@ yarn-error.*
 # SonarQube
 .scannerwork/
 
+# Keystore files (never commit)
+inoffice-release.keystore
+inoffice-keystore-password.txt
+
 # Coverage
 coverage/
