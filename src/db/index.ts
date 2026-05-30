@@ -159,7 +159,7 @@ export async function importFromExcel(): Promise<number> {
   let count = 0;
   for (const row of data) {
     const status = row.Status?.trim().toLowerCase();
-    const dateStr = String(row.Date ?? "").replace(/\//g, "-");
+    const dateStr = String(row.Date ?? "").replaceAll("/", "-");
     if (dateStr && status && VALID_STATUSES.has(status as DayStatus)) {
       await db.runAsync(
         "INSERT OR REPLACE INTO days (date, status) VALUES (?, ?)",
