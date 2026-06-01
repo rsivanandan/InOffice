@@ -1,6 +1,6 @@
 # Privacy Policy for InOffice
 
-**Last updated: May 28, 2026**
+**Last updated: June 1, 2026**
 
 ## Overview
 
@@ -8,7 +8,15 @@ InOffice ("the App") is a local-first attendance tracking application. Your priv
 
 ## Data Collection
 
-The App **does not collect, store, or transmit any personal data** to external servers. All data you enter (attendance records, settings) is stored exclusively on your device using local SQLite storage.
+The App **does not collect, store, or transmit any personal data** to external servers. All data you enter (attendance records including dates, statuses, and leave types) is stored on your device using local SQLite storage.
+
+## Cloud Backup (Optional)
+
+If you enable cloud backup in Settings, your attendance data is backed up to:
+- **iCloud Drive** (iOS) — stored in your personal iCloud account
+- **Google Drive** (Android) — stored in your personal Google account
+
+Cloud backup is **opt-in** and disabled by default. You can enable or disable it at any time from Settings. Backups contain attendance dates and their statuses (in-office, absent, public holiday, personal leave, sick leave). You can also delete all cloud backups from the Settings screen.
 
 ## No Account Required
 
@@ -24,15 +32,25 @@ The App optionally exports attendance data to Excel (.xlsx) files. This export i
 
 ## Third-Party Services
 
-The App does not integrate with any third-party services, APIs, or cloud platforms.
+The App does not integrate with any third-party analytics, advertising, or tracking services. Cloud storage services (iCloud and Google Drive) are only used when you explicitly enable cloud backup.
 
 ## Data Security
 
-Since all data remains on your device, data security is managed by your device's operating system. The App uses expo-sqlite which stores data in an unencrypted SQLite database on your device.
+Local data is stored in an unencrypted SQLite database managed by your device's operating system. Cloud backups are stored in your personal cloud accounts, subject to the security measures of Apple and Google respectively.
 
-## Your Rights
+## Your Rights (GDPR / Privacy Rights)
 
-You can delete all app data at any time via the Settings screen within the App, or by uninstalling the App.
+You have the following rights regarding your data:
+
+- **Right to access**: Export your attendance data to an Excel file from Settings → Export to Excel.
+- **Right to rectification**: Edit any day's status directly from the Calendar screen.
+- **Right to erasure**: Delete all data (local + cloud backups) from Settings → Danger Zone → Delete All Data.
+- **Right to data portability**: Export your data as an Excel file and import it on another device.
+- **Right to withdraw consent**: Disable cloud backup at any time from Settings → Auto Backup.
+
+## Data Retention
+
+Local data is kept on your device until you delete it or uninstall the App. Cloud backups are retained until you delete them or disable cloud backup. Deleting the app from your device removes local data; cloud backups (if enabled) must be deleted separately from the Settings screen.
 
 ## Changes to This Policy
 

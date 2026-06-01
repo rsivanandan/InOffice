@@ -10,6 +10,7 @@ import {
   isAutoBackupEnabled,
   setAutoBackupEnabled,
   listCloudBackups,
+  deleteAllCloudBackups,
 } from "../utils/backup";
 import { format } from "date-fns";
 
@@ -47,6 +48,28 @@ function ActionRow({
       <Text style={{ fontSize: 14, fontWeight: "600", color }}>{label}</Text>
       <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{description}</Text>
     </TouchableOpacity>
+  );
+}
+
+function handleRestore(fileName: string) {
+  Alert.alert(
+    "Restore from backup",
+    `Restore data from ${fileName}? This will overwrite your current data.`,
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Restore",
+        style: "destructive",
+        onPress: async () => {
+          const result = await restoreFromCloudBackup(fileName);
+          if (result.success) {
+            Alert.alert("Restore Complete", result.message);
+          } else {
+            Alert.alert("Restore Failed", result.message);
+          }
+        },
+      },
+    ]
   );
 }
 
@@ -104,28 +127,6 @@ export default function SettingsScreen() {
     } else {
       Alert.alert("Backup Failed", result.message);
     }
-  }
-
-  async function handleRestore(fileName: string) {
-    Alert.alert(
-      "Restore from backup",
-      `Restore data from ${fileName}? This will overwrite your current data.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Restore",
-          style: "destructive",
-          onPress: async () => {
-            const result = await restoreFromCloudBackup(fileName);
-            if (result.success) {
-              Alert.alert("Restore Complete", result.message);
-            } else {
-              Alert.alert("Restore Failed", result.message);
-            }
-          },
-        },
-      ]
-    );
   }
 
   async function toggleAutoBackup(val: boolean) {
@@ -387,13 +388,13 @@ export default function SettingsScreen() {
           ⚠ Danger Zone
         </Text>
         <Text style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
-          This will remove all attendance records and settings. This cannot be undone.
+          This will remove all attendance records, settings, AND cloud backups. This cannot be undone.
         </Text>
         <TouchableOpacity
           onPress={() =>
             Alert.alert(
               "Delete all data?",
-              "This will remove all attendance records and settings. This cannot be undone.",
+              "This will remove all attendance records, settings, AND cloud backups. This cannot be undone.",
               [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -401,7 +402,10 @@ export default function SettingsScreen() {
                   style: "destructive",
                   onPress: async () => {
                     await deleteAllData();
+                    const result = await deleteAllCloudBackups();
+                    setCloudBackups([]);
                     setTargetPct(60);
+                    Alert.alert("Deleted", result.success ? "All data and cloud backups deleted." : "Local data deleted. " + result.message);
                   },
                 },
               ]

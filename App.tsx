@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Alert, Platform } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TabView, SceneMap } from "react-native-tab-view";
 import * as TaskManager from "expo-task-manager";
-import * as BackgroundFetch from "expo-background-fetch";
+import * as BackgroundTask from "expo-background-task";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import CalendarScreen from "./src/screens/CalendarScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
@@ -20,28 +20,26 @@ const BACKGROUND_BACKUP_TASK = "background-daily-backup";
 TaskManager.defineTask(BACKGROUND_BACKUP_TASK, async () => {
   try {
     const autoBackup = await isAutoBackupEnabled();
-    if (!autoBackup) return BackgroundFetch.BackgroundFetchResult.NoData;
+    if (!autoBackup) return BackgroundTask.BackgroundTaskResult.Failed;
 
     const result = await performBackup();
     return result.success
-      ? BackgroundFetch.BackgroundFetchResult.NewData
-      : BackgroundFetch.BackgroundFetchResult.Failed;
+      ? BackgroundTask.BackgroundTaskResult.Success
+      : BackgroundTask.BackgroundTaskResult.Failed;
   } catch {
-    return BackgroundFetch.BackgroundFetchResult.Failed;
+    return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
 
 async function registerBackgroundBackup() {
   try {
-    const status = await BackgroundFetch.getStatusAsync();
-    if (status === BackgroundFetch.BackgroundFetchStatus.Denied) return;
+    const status = await BackgroundTask.getStatusAsync();
+    if (status === BackgroundTask.BackgroundTaskStatus.Restricted) return;
 
     const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_BACKUP_TASK);
     if (!isRegistered) {
-      await BackgroundFetch.registerTaskAsync(BACKGROUND_BACKUP_TASK, {
+      await BackgroundTask.registerTaskAsync(BACKGROUND_BACKUP_TASK, {
         minimumInterval: 24 * 60,
-        stopOnTerminate: false,
-        startOnBoot: true,
       });
     }
   } catch {

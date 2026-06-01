@@ -45,18 +45,26 @@ jest.mock("expo-file-system", () => {
   const mockWrite = jest.fn();
   const mockPickFileAsync = jest.fn();
   const mockBytes = jest.fn().mockImplementation(async () => mockFileBytes);
+  const mockDirCreate = jest.fn();
   const File = jest.fn().mockImplementation((...args) => ({
     write: mockWrite,
     uri: args.length === 1 ? args[0] : `${args[0]}/${args[1]}`,
     bytes: mockBytes,
   }));
   File.pickFileAsync = mockPickFileAsync;
+  const Directory = jest.fn().mockImplementation((...args) => ({
+    exists: true,
+    create: mockDirCreate,
+    uri: args.length === 1 ? args[0] : `${args[0]}/${args[1]}`,
+  }));
   return {
-    Paths: { cache: "file:///cache" },
+    Paths: { cache: "file:///cache", document: "file:///documents" },
     File,
+    Directory,
     __mockWrite: mockWrite,
     __mockPickFileAsync: mockPickFileAsync,
     __mockBytes: mockBytes,
+    __mockDirCreate: mockDirCreate,
   };
 });
 
@@ -91,6 +99,7 @@ const fsMocks = require("expo-file-system") as unknown as {
   File: jest.Mock;
   __mockWrite: jest.Mock;
   __mockPickFileAsync: jest.Mock;
+  __mockDirCreate: jest.Mock;
 };
 
 describe("DB module (mocked)", () => {
@@ -329,7 +338,7 @@ describe("DB module (mocked)", () => {
 
       expect(fsMocks.__mockWrite).toHaveBeenCalledWith(new Uint8Array([1, 2, 3]));
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
-        "file:///cache/rto-backup.db",
+        expect.stringContaining("inoffice_backup_"),
         expect.objectContaining({ mimeType: "application/octet-stream" })
       );
     });

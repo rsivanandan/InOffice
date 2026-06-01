@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { format } from "date-fns";
 import { File, Directory, Paths } from "expo-file-system";
 import * as SQLite from "expo-sqlite";
@@ -41,7 +40,8 @@ export async function performBackup(): Promise<{ success: boolean; message: stri
     if (cloudModule && await cloudModule.isCloudAvailable()) {
       try {
         await cloudModule.uploadBackup(localFile.uri, fileName);
-      } catch (cloudError) {
+      } catch {
+        // Cloud upload is optional — backup succeeds without it
       }
     }
 
@@ -155,4 +155,46 @@ function cleanupOldLocalBackups(dir: Directory): void {
 export async function hasCloudBackups(): Promise<boolean> {
   const backups = await listCloudBackups();
   return backups.length > 0;
+}
+
+export async function deleteAllCloudBackups(): Promise<{ success: boolean; message: string }> {
+  try {
+    const cloudModule = getCloudModule();
+    if (!cloudModule) {
+      return { success: false, message: "Cloud backup not available on this device" };
+    }
+
+    const isAvail = await cloudModule.isCloudAvailable();
+    if (!isAvail) {
+      return { success: false, message: "Cloud storage is not signed in" };
+    }
+
+    const backups = await listCloudBackups();
+    if (backups.length === 0) {
+      return { success: true, message: "No cloud backups to delete" };
+    }
+
+    let deleted = 0;
+    let failed = 0;
+    for (const name of backups) {
+      try {
+        await cloudModule.deleteBackup(name);
+        deleted++;
+      } catch {
+        failed++;
+      }
+    }
+
+    return {
+      success: true,
+      message: failed > 0
+        ? `Deleted ${deleted} backup(s), ${failed} failed`
+        : `Deleted ${deleted} backup(s)`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to delete cloud backups",
+    };
+  }
 }
