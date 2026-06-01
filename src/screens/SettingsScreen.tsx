@@ -121,9 +121,7 @@ export default function SettingsScreen() {
       if (lastDate) setLastBackupDate(lastDate);
       const backups = await listCloudBackups();
       setCloudBackups(backups);
-      if (Platform.OS === "web") {
-        Alert.alert("Backup Complete", result.message);
-      }
+      Alert.alert("Backup Complete", result.message);
     } else {
       Alert.alert("Backup Failed", result.message);
     }
@@ -161,9 +159,10 @@ export default function SettingsScreen() {
         </Text>
         <View style={{ flexDirection: "row", gap: 6, justifyContent: "center" }}>
           {presets.map((p) => (
-            <View
+            <TouchableOpacity
               key={p}
-              onTouchEnd={() => updateTarget(p)}
+              onPress={() => updateTarget(p)}
+              activeOpacity={0.7}
               style={{
                 flex: 1,
                 paddingVertical: 8,
@@ -175,7 +174,7 @@ export default function SettingsScreen() {
               <Text style={{ fontWeight: "700", color: targetPct === p ? "white" : "#94a3b8" }}>
                 {p}%
               </Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
@@ -405,7 +404,7 @@ export default function SettingsScreen() {
                     const result = await deleteAllCloudBackups();
                     setCloudBackups([]);
                     setTargetPct(60);
-                    Alert.alert("Deleted", result.success ? "All data and cloud backups deleted." : "Local data deleted. " + result.message);
+                    Alert.alert("Deleted", "All data deleted" + (result.message !== "No cloud backups to delete" ? " and " + result.message : "") + ".");
                   },
                 },
               ]

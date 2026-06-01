@@ -38,7 +38,7 @@ export default function CalendarScreen() {
       await setDayStatus(date, status);
       await loadRecords();
     },
-    [year, month]
+    [year, month, loadRecords]
   );
 
   function prevMonth() {

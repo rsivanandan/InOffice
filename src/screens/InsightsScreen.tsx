@@ -19,7 +19,7 @@ const StatCard = memo(function StatCard({
   excludeLeaves: boolean;
 }>) {
   const pct = excludeLeaves ? s.netInOfficePct : s.inOfficePct;
-  const label = excludeLeaves ? "Excluding holidays & leaves" : "Including holidays & leaves";
+  const label = excludeLeaves ? "Excluding holidays & leave" : "Including holidays & leave";
   const color = excludeLeaves ? "#22c55e" : "#3b82f6";
   const bgTint = excludeLeaves ? "#052e16" : "#0c1929";
   const borderTint = excludeLeaves ? "#22c55e" : "#3b82f6";
@@ -47,7 +47,7 @@ const StatCard = memo(function StatCard({
       <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
         <StatItem label="In office" value={s.inOfficeDays} color="#22c55e" />
         <StatItem label="Working days" value={excludeLeaves ? s.netWorkingDays : s.totalWorkingDays} color="#94a3b8" />
-        {excludeLeaves && <StatItem label="Leaves" value={s.leaveDays} color="#f59e0b" />}
+        {excludeLeaves && <StatItem label="Off days" value={s.leaveDays} color="#f59e0b" />}
       </View>
     </View>
   );
@@ -93,7 +93,7 @@ const MonthBreakdownCard = memo(function MonthBreakdownCard({
           value={`${s.inOfficeDays}/${excludeLeaves ? s.netWorkingDays : s.totalWorkingDays}`}
           color="#f8fafc"
         />
-        {excludeLeaves && <StatItem label="Leaves" value={s.leaveDays} color="#f59e0b" />}
+        {excludeLeaves && <StatItem label="Off days" value={s.leaveDays} color="#f59e0b" />}
       </View>
     </View>
   );
@@ -126,7 +126,14 @@ export default function InsightsScreen() {
         setStats(monthStats);
 
         const months = Array.from(
-          { length: currentMonth },
+          {
+            length:
+              currentYear < today.getFullYear()
+                ? 12
+                : currentYear > today.getFullYear()
+                  ? 12
+                  : currentMonth,
+          },
           (_, i) => i + 1
         );
 

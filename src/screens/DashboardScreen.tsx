@@ -243,6 +243,7 @@ export default function DashboardScreen() {
   }, [tabIndex, viewDate]);
 
   async function markToday() {
+    await initDb();
     await setDayStatus(todayStr, "in-office");
     const day = await getDay(todayStr);
     setTodayStatus(day?.status ?? null);
@@ -337,7 +338,7 @@ export default function DashboardScreen() {
                     {stats.leaveDays}
                   </Text>
                   <Text style={{ fontSize: 12, fontWeight: "500", color: "#64748b", marginTop: 1 }}>
-                    leave{getPlural(stats.leaveDays)} taken
+                    day{getPlural(stats.leaveDays)} off
                   </Text>
                 </View>
               )}
@@ -376,7 +377,7 @@ export default function DashboardScreen() {
               value={excludeLeaves ? ytdStats.netWorkingDays : ytdStats.totalWorkingDays}
               color="#f8fafc"
             />
-            {excludeLeaves && <StatItem label="Leaves" value={ytdStats.leaveDays} color="#f59e0b" />}
+            {excludeLeaves && <StatItem label="Off days" value={ytdStats.leaveDays} color="#f59e0b" />}
           </View>
         </View>
       )}

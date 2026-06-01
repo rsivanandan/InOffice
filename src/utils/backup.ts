@@ -160,13 +160,8 @@ export async function hasCloudBackups(): Promise<boolean> {
 export async function deleteAllCloudBackups(): Promise<{ success: boolean; message: string }> {
   try {
     const cloudModule = getCloudModule();
-    if (!cloudModule) {
-      return { success: false, message: "Cloud backup not available on this device" };
-    }
-
-    const isAvail = await cloudModule.isCloudAvailable();
-    if (!isAvail) {
-      return { success: false, message: "Cloud storage is not signed in" };
+    if (!cloudModule || !(await cloudModule.isCloudAvailable())) {
+      return { success: true, message: "No cloud backups to delete" };
     }
 
     const backups = await listCloudBackups();

@@ -16,7 +16,12 @@ export function getDb(): SQLite.SQLiteDatabase {
 }
 
 export async function initDb() {
-  try { await db?.closeAsync(); } catch {}
+  if (db) {
+    try {
+      await db.execAsync("SELECT 1");
+      return;
+    } catch {}
+  }
   db = await SQLite.openDatabaseAsync("rto.db");
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS days (
