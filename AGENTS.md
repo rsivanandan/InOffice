@@ -97,6 +97,30 @@ eas build:configure                # configure credentials (first time)
 | Developer email | Set to `rsivanandan@gmail.com` in metadata                                     |
 | App signing     | Keystore at `android/app/inoffice-release.keystore` (keep safe!)               |
 
+## Task History
+
+### Current Session — Cloud Backup Scheduler
+
+| # | Task | Status |
+|---|------|--------|
+| 1 | Install `expo-background-fetch`, `expo-task-manager`, `expo-notifications` | Done |
+| 2 | Create native module scaffold (`modules/cloud-backup/`) | Done |
+| 3 | Create iOS Swift module (iCloud Drive via `NSFileManager`) | Done |
+| 4 | Create Android Kotlin module (Google Drive REST API) | Done |
+| 5 | Create TypeScript native module interface & re-export | Done |
+| 6 | Create core backup service (`src/utils/backup.ts`) | Done |
+| 7 | Update `app.json` with iCloud entitlements | Done |
+| 8 | Update `SettingsScreen.tsx` with Backup & Restore UI section | Done |
+| 9 | Register background backup task in `App.tsx` (`defineTask` + `BackgroundFetch.registerTaskAsync`) | Done |
+| 10 | Fresh-install restore prompt in `App.tsx` | Done |
+| 11 | Fix backup.ts API: use `Directory` not `File`, sync `exists`/`create`/`delete`, use `db.serializeAsync()` via `getDb()` | Done |
+| 12 | Rebuild & verify native modules compile (pending) | Pending |
+
+### Key API Lessons
+- `expo-file-system` v56: `File` writes are sync (`file.write(data)`), `Directory` has sync `exists` property and `create()`/`delete()` methods, `list()` returns `(Directory | File)[]`
+- `expo-sqlite` v56: `serializeAsync()` on db instance, `SQLite.deserializeDatabaseAsync(content)` top-level, `SQLite.backupDatabaseAsync({ sourceDatabase, destDatabase })` top-level
+- `Directory` vs `File`: use `Directory` for folder ops (create, list, exists), use `File` for file read/write
+
 ## Important constraints
 
 - Read https://docs.expo.dev/versions/v56.0.0/ before writing Expo code

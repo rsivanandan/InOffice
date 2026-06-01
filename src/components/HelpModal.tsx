@@ -38,8 +38,11 @@ const SECTIONS = [
       "Set your Target % (50–100%)",
       "Color Legend explains each status",
       "Export / Import Excel files for backup",
-      "Backup Database — share a .db copy of all data",
-      "Restore Database — pick a .db backup to restore from",
+      "Daily Auto Backup — automatic cloud backup to iCloud (iOS) or Google Drive (Android)",
+      "Backup Now — manual cloud backup anytime",
+      "Restore — pick a cloud backup file to restore your data",
+      "Backup to local file — share a .db copy via email, AirDrop, etc.",
+      "Restore from local file — pick a .db backup to restore from",
       "Download Sample to get a template",
       "Delete All Data to reset everything",
     ],
@@ -56,8 +59,11 @@ const SECTIONS = [
   {
     title: "Privacy",
     items: [
-      "All data stays on your device — no cloud, no accounts, no tracking",
-      "Uninstalling the app removes all data",
+      "Your attendance data stays on your device by default",
+      "Cloud backup (iCloud / Google Drive) is optional — enabled in Settings",
+      "Cloud backups are stored in your personal cloud storage, accessible only by you",
+      "No tracking, no analytics, no accounts required",
+      "Uninstalling the app removes all local data (cloud backups remain if enabled)",
     ],
   },
 ];

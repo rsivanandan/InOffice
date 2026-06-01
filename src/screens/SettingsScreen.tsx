@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef, useContext } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Share } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Linking, Share, Platform } from "react-native";
 import { TabIndexContext } from "../utils/TabIndexContext";
 import { getSetting, setSetting, initDb, deleteAllData, exportToExcel, importFromExcel, downloadSampleExcel, backupDatabase, restoreDatabase } from "../db";
 import HelpModal from "../components/HelpModal";
+import {
+  performBackup,
+  restoreFromCloudBackup,
+  getLastBackupDate,
+  isAutoBackupEnabled,
+  setAutoBackupEnabled,
+  listCloudBackups,
+} from "../utils/backup";
+import { format } from "date-fns";
 
 const MY_INDEX = 3;
 
@@ -44,6 +53,10 @@ function ActionRow({
 export default function SettingsScreen() {
   const [targetPct, setTargetPct] = useState(60);
   const [helpVisible, setHelpVisible] = useState(false);
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
+  const [autoBackup, setAutoBackup] = useState(false);
+  const [cloudBackups, setCloudBackups] = useState<string[]>([]);
+  const [backingUp, setBackingUp] = useState(false);
   const tabIndex = useContext(TabIndexContext);
   const cancelledRef = useRef(false);
 
@@ -55,6 +68,14 @@ export default function SettingsScreen() {
         if (cancelledRef.current) return;
         const t = await getSetting("targetPct");
         if (!cancelledRef.current && t) setTargetPct(Number.parseInt(t, 10));
+        if (!cancelledRef.current) {
+          const lastDate = await getLastBackupDate();
+          if (lastDate) setLastBackupDate(lastDate);
+          const auto = await isAutoBackupEnabled();
+          setAutoBackup(auto);
+          const backups = await listCloudBackups();
+          setCloudBackups(backups);
+        }
       })
       .catch(() => {});
     return () => {
@@ -65,6 +86,61 @@ export default function SettingsScreen() {
   async function updateTarget(val: number) {
     setTargetPct(val);
     await setSetting("targetPct", String(val));
+  }
+
+  async function handleBackupNow() {
+    if (backingUp) return;
+    setBackingUp(true);
+    const result = await performBackup();
+    setBackingUp(false);
+    if (result.success) {
+      const lastDate = await getLastBackupDate();
+      if (lastDate) setLastBackupDate(lastDate);
+      const backups = await listCloudBackups();
+      setCloudBackups(backups);
+      if (Platform.OS === "web") {
+        Alert.alert("Backup Complete", result.message);
+      }
+    } else {
+      Alert.alert("Backup Failed", result.message);
+    }
+  }
+
+  async function handleRestore(fileName: string) {
+    Alert.alert(
+      "Restore from backup",
+      `Restore data from ${fileName}? This will overwrite your current data.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restore",
+          style: "destructive",
+          onPress: async () => {
+            const result = await restoreFromCloudBackup(fileName);
+            if (result.success) {
+              Alert.alert("Restore Complete", result.message);
+            } else {
+              Alert.alert("Restore Failed", result.message);
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  async function toggleAutoBackup(val: boolean) {
+    setAutoBackup(val);
+    await setAutoBackupEnabled(val);
+    if (val) {
+      const result = await performBackup();
+      Alert.alert(result.success ? "Backup complete" : "Backup failed", result.message);
+      if (result.success) {
+        const lastDate = await getLastBackupDate();
+        if (lastDate) setLastBackupDate(lastDate);
+        const backups = await listCloudBackups();
+        setCloudBackups(backups);
+      }
+    }
   }
 
   const presets = [50, 60, 70, 80, 100];
@@ -182,59 +258,167 @@ export default function SettingsScreen() {
 
       <View style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#334155", marginTop: 20 }}>
         <Text style={{ fontSize: 15, fontWeight: "600", color: "#94a3b8", marginBottom: 12 }}>
-          Backup / Restore
+          Auto Backup
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#334155" }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: "#f8fafc" }}>
+              Daily auto backup
+            </Text>
+            <Text style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+              {Platform.OS === "ios" ? "Backup to iCloud Drive daily" : "Backup to Google Drive daily"}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => toggleAutoBackup(!autoBackup)}
+            style={{
+              width: 48,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: autoBackup ? "#22c55e" : "#475569",
+              justifyContent: "center",
+              paddingHorizontal: 3,
+            }}
+          >
+            <View
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                backgroundColor: "#fff",
+                alignSelf: autoBackup ? "flex-end" : "flex-start",
+              }}
+            />
+          </TouchableOpacity>
+        </View>
+        {lastBackupDate && (
+          <View style={{ paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#334155" }}>
+            <Text style={{ fontSize: 12, color: "#94a3b8" }}>
+              Last backup: {format(new Date(lastBackupDate), "MMM d, yyyy h:mm a")}
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity
+          onPress={handleBackupNow}
+          disabled={backingUp}
+          activeOpacity={0.85}
+          style={{
+            backgroundColor: backingUp ? "#475569" : "#22c55e",
+            paddingVertical: 12,
+            borderRadius: 10,
+            alignItems: "center",
+            marginTop: 8,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+            {backingUp ? "Backing up..." : "Backup Now"}
+          </Text>
+        </TouchableOpacity>
+        {cloudBackups.length > 0 && (
+          <View style={{ paddingTop: 8 }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#94a3b8", marginBottom: 6 }}>
+              Cloud backups ({cloudBackups.length})
+            </Text>
+            {cloudBackups.slice(0, 5).map((name) => (
+              <View
+                key={name}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 6,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#1e293b",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: "#cbd5e1", flex: 1 }}>
+                  {name.replace("inoffice_backup_", "").replace(".db", "")}
+                </Text>
+                <TouchableOpacity onPress={() => handleRestore(name)}>
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: "#3b82f6" }}>
+                    Restore
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <View style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#334155", marginTop: 20 }}>
+        <Text style={{ fontSize: 15, fontWeight: "600", color: "#94a3b8", marginBottom: 12 }}>
+          Local Backup / Restore
         </Text>
         <ActionRow
-          label="Backup Database"
-          description="Share a copy of your entire database"
+          label="Backup to local file"
+          description="Save a backup file to share or store manually"
           color="#3b82f6"
           onPress={async () => { try { await backupDatabase(); } catch { Alert.alert("Error", "Could not backup database."); } }}
           border
         />
         <ActionRow
-          label="Restore Database"
-          description="Pick a .db backup file to restore from"
-          color="#f59e0b"
+          label="Restore from local file"
+          description="Pick a previously saved backup file to restore"
+          color="#3b82f6"
           onPress={async () => { try { const ok = await restoreDatabase(); if (ok) Alert.alert("Restored", "Database restored from backup."); else Alert.alert("Canceled", "No file was selected."); } catch { Alert.alert("Error", "Could not restore database. Make sure it's a valid .db file."); } }}
           border={false}
         />
       </View>
 
-      <View style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#334155", marginTop: 20, marginBottom: 24 }}>
-        <View style={{ flexDirection: "row" }}>
-          <TouchableOpacity
-            onPress={() => setHelpVisible(true)}
-            style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRightWidth: 1, borderRightColor: "#334155" }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#3b82f6" }}>
-              Help
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert(
-                "Delete all data?",
-                "This will remove all attendance records and settings. This cannot be undone.",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                      await deleteAllData();
-                      setTargetPct(60);
-                    },
+      <TouchableOpacity
+        onPress={() => setHelpVisible(true)}
+        style={{
+          backgroundColor: "#1e293b",
+          borderRadius: 16,
+          padding: 20,
+          borderWidth: 1,
+          borderColor: "#334155",
+          marginTop: 20,
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: 14, fontWeight: "600", color: "#3b82f6" }}>
+          Help
+        </Text>
+      </TouchableOpacity>
+
+      <View style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#ef4444", marginTop: 20, marginBottom: 24 }}>
+        <Text style={{ fontSize: 15, fontWeight: "600", color: "#ef4444", marginBottom: 8 }}>
+          ⚠ Danger Zone
+        </Text>
+        <Text style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+          This will remove all attendance records and settings. This cannot be undone.
+        </Text>
+        <TouchableOpacity
+          onPress={() =>
+            Alert.alert(
+              "Delete all data?",
+              "This will remove all attendance records and settings. This cannot be undone.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Delete",
+                  style: "destructive",
+                  onPress: async () => {
+                    await deleteAllData();
+                    setTargetPct(60);
                   },
-                ]
-              )
-            }
-            style={{ flex: 1, alignItems: "center", paddingVertical: 8 }}
-          >
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#ef4444" }}>
-              Delete All Data
-            </Text>
-          </TouchableOpacity>
-        </View>
+                },
+              ]
+            )
+          }
+          activeOpacity={0.85}
+          style={{
+            backgroundColor: "#ef4444",
+            paddingVertical: 12,
+            borderRadius: 10,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+            Delete All Data
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 32, marginBottom: 16 }}>

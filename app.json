@@ -20,6 +20,12 @@
         "CFBundleDisplayName": "InOffice",
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSPhotoLibraryUsageDescription": "Used to import attendance data from Excel files."
+      },
+      "entitlements": {
+        "com.apple.developer.icloud-container-environment": ["Production"],
+        "com.apple.developer.icloud-services": ["CloudDocuments"],
+        "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
+        "com.apple.developer.icloud-container-identifiers": ["iCloud.$(CFBundleIdentifier)"]
       }
     },
     "android": {

@@ -1,11 +1,19 @@
 import * as SQLite from "expo-sqlite";
-import { Paths, File } from "expo-file-system";
+import { Paths, File, Directory } from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import { format } from "date-fns";
 
 import * as XLSX from "xlsx";
 import type { DayRecord, DayStatus } from "../types";
 
+const BACKUP_DIR = "InOfficeBackups";
+const BACKUP_PREFIX = "inoffice_backup_";
+
 let db: SQLite.SQLiteDatabase;
+
+export function getDb(): SQLite.SQLiteDatabase {
+  return db;
+}
 
 export async function initDb() {
   try { await db?.closeAsync(); } catch {}
@@ -75,7 +83,10 @@ export async function deleteAllData() {
 
 export async function backupDatabase(): Promise<void> {
   const backupData = await db.serializeAsync();
-  const backup = new File(Paths.cache, "rto-backup.db");
+  const dir = new Directory(Paths.document, BACKUP_DIR);
+  if (!dir.exists) dir.create();
+  const fileName = `${BACKUP_PREFIX}${format(new Date(), "yyyy-MM-dd")}.db`;
+  const backup = new File(dir, fileName);
   backup.write(backupData);
   await Sharing.shareAsync(backup.uri, {
     mimeType: "application/octet-stream",

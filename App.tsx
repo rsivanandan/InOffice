@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Alert, Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TabView, SceneMap } from "react-native-tab-view";
+import * as TaskManager from "expo-task-manager";
+import * as BackgroundFetch from "expo-background-fetch";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import CalendarScreen from "./src/screens/CalendarScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
@@ -11,6 +13,40 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import WelcomeModal from "./src/components/WelcomeModal";
 import { TabIndexContext } from "./src/utils/TabIndexContext";
 import { initDb, getSetting, setSetting } from "./src/db";
+import { performBackup, hasCloudBackups, isAutoBackupEnabled } from "./src/utils/backup";
+
+const BACKGROUND_BACKUP_TASK = "background-daily-backup";
+
+TaskManager.defineTask(BACKGROUND_BACKUP_TASK, async () => {
+  try {
+    const autoBackup = await isAutoBackupEnabled();
+    if (!autoBackup) return BackgroundFetch.BackgroundFetchResult.NoData;
+
+    const result = await performBackup();
+    return result.success
+      ? BackgroundFetch.BackgroundFetchResult.NewData
+      : BackgroundFetch.BackgroundFetchResult.Failed;
+  } catch {
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+async function registerBackgroundBackup() {
+  try {
+    const status = await BackgroundFetch.getStatusAsync();
+    if (status === BackgroundFetch.BackgroundFetchStatus.Denied) return;
+
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_BACKUP_TASK);
+    if (!isRegistered) {
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_BACKUP_TASK, {
+        minimumInterval: 24 * 60,
+        stopOnTerminate: false,
+        startOnBoot: true,
+      });
+    }
+  } catch {
+  }
+}
 
 const TABS = [
   { key: "dashboard", label: "Dashboard", iconOutline: "home-outline", iconFilled: "home" },
@@ -85,8 +121,25 @@ function AppContent() {
   useEffect(() => {
     initDb().then(async () => {
       const hasLaunched = await getSetting("hasLaunched");
-      if (!hasLaunched) setWelcomeVisible(true);
+      if (!hasLaunched) {
+        setWelcomeVisible(true);
+        const hasCloud = await hasCloudBackups();
+        if (hasCloud) {
+          Alert.alert(
+            "Restore from backup?",
+            "We found existing cloud backups. Would you like to restore your data?",
+            [
+              { text: "Not now", style: "cancel" },
+              {
+                text: "View backups",
+                onPress: () => setIndex(3),
+              },
+            ]
+          );
+        }
+      }
       setReady(true);
+      registerBackgroundBackup();
     });
   }, []);
 
