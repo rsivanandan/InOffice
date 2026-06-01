@@ -247,6 +247,12 @@ export default function DashboardScreen() {
     await setDayStatus(todayStr, "in-office");
     const day = await getDay(todayStr);
     setTodayStatus(day?.status ?? null);
+    const allRecords = await getAllDays();
+    const n = new Date();
+    const vyear = viewDate.getFullYear();
+    const vmonth = viewDate.getMonth() + 1;
+    setStats(calcMonthStats(vyear, vmonth, allRecords));
+    setYtdStats(calcYtdStats(n.getFullYear(), n.getMonth() + 1, allRecords, n));
   }
 
   const pct = getPct(stats, excludeLeaves);
