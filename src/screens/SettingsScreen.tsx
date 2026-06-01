@@ -404,7 +404,7 @@ export default function SettingsScreen() {
                     const result = await deleteAllCloudBackups();
                     setCloudBackups([]);
                     setTargetPct(60);
-                    Alert.alert("Deleted", "All data deleted" + (result.message !== "No cloud backups to delete" ? " and " + result.message : "") + ".");
+                    Alert.alert("Deleted", "All data deleted" + (result.message === "No cloud backups to delete" ? "" : " and " + result.message) + ".");
                   },
                 },
               ]

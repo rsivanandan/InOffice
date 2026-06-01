@@ -125,17 +125,8 @@ export default function InsightsScreen() {
         if (cancelledRef.current) return;
         setStats(monthStats);
 
-        const months = Array.from(
-          {
-            length:
-              currentYear < today.getFullYear()
-                ? 12
-                : currentYear > today.getFullYear()
-                  ? 12
-                  : currentMonth,
-          },
-          (_, i) => i + 1
-        );
+        const monthsCount = currentYear === today.getFullYear() ? currentMonth : 12;
+        const months = Array.from({ length: monthsCount }, (_, i) => i + 1);
 
         const breakdown = months.map((m) => ({
           month: m,
