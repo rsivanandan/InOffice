@@ -41,6 +41,12 @@ sonar-scanner         # analyze with SonarQube (needs SONAR_TOKEN)
 - Insights shows two percentages: including holidays/leaves, and excluding them (net working days)
 - All data stored locally in SQLite via `expo-sqlite`
 
+## Git workflow
+
+- All development work on `development` branch
+- Only merge to `master` for releases
+- Commit messages: descriptive, imperative mood
+
 ## Commands
 
 ```sh

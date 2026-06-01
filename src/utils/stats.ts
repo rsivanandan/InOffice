@@ -9,10 +9,11 @@ export function isWorkingDay(d: Date): boolean {
 export function calcMonthStats(
   year: number,
   month: number,
-  records: DayRecord[]
+  records: DayRecord[],
+  endDate?: Date
 ): MonthStats {
   const start = startOfMonth(new Date(year, month - 1));
-  const end = endOfMonth(new Date(year, month - 1));
+  const end = endDate ?? endOfMonth(new Date(year, month - 1));
   const allDays = eachDayOfInterval({ start, end });
 
   const recordMap = new Map(records.map((r) => [r.date, r.status]));

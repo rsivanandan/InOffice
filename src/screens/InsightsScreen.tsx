@@ -132,7 +132,7 @@ export default function InsightsScreen() {
 
         const breakdown = months.map((m) => ({
           month: m,
-          stats: calcMonthStats(currentYear, m, records),
+          stats: calcMonthStats(currentYear, m, records, m === currentMonth ? today : undefined),
         }));
         if (cancelledRef.current) return;
         setMonthBreakdown(breakdown);

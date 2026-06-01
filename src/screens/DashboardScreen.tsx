@@ -182,11 +182,13 @@ const DashboardHeader = memo(function DashboardHeader({
 function calcYtdStats(
   year: number,
   month: number,
-  records: DayRecord[]
+  records: DayRecord[],
+  today: Date
 ): MonthStats {
   const acc: MonthStats = { totalWorkingDays: 0, inOfficeDays: 0, leaveDays: 0, inOfficePct: 0, netWorkingDays: 0, netInOfficePct: 0 };
   for (let m = 1; m <= month; m++) {
-    const s = calcMonthStats(year, m, records);
+    const endDate = m === month ? today : undefined;
+    const s = calcMonthStats(year, m, records, endDate);
     acc.totalWorkingDays += s.totalWorkingDays;
     acc.inOfficeDays += s.inOfficeDays;
     acc.leaveDays += s.leaveDays;
@@ -232,7 +234,7 @@ export default function DashboardScreen() {
         const vyear = viewDate.getFullYear();
         const vmonth = viewDate.getMonth() + 1;
         setStats(calcMonthStats(vyear, vmonth, allRecords));
-        setYtdStats(calcYtdStats(n.getFullYear(), n.getMonth() + 1, allRecords));
+        setYtdStats(calcYtdStats(n.getFullYear(), n.getMonth() + 1, allRecords, n));
       })
       .catch(() => {});
     return () => {
