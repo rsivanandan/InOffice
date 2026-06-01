@@ -60,6 +60,8 @@ export default function CalendarScreen() {
   }
 
   const today = format(new Date(), "yyyy-MM-dd");
+  const todayRecord = records.find((r) => r.date === today);
+  const isTodayMarked = todayRecord?.status === "in-office";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0f172a", paddingTop: 4 }}>
@@ -99,6 +101,7 @@ export default function CalendarScreen() {
       <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
         <TouchableOpacity
           onPress={() => handleUpdate(today, "in-office")}
+          disabled={isTodayMarked}
           style={{
             backgroundColor: "#22c55e",
             paddingVertical: 14,
@@ -107,7 +110,7 @@ export default function CalendarScreen() {
           }}
         >
           <Text style={{ color: "white", fontWeight: "700", fontSize: 16 }}>
-            Mark Today as In Office
+            {isTodayMarked ? "✓ Marked for today" : "Mark Today as In Office"}
           </Text>
         </TouchableOpacity>
       </View>

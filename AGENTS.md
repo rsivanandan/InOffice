@@ -65,7 +65,7 @@ export RTO_KEYSTORE_PASSWORD="<password>"
 ```
 
 Keystore: `android/app/inoffice-release.keystore` (alias: `inoffice`)
-Password via env var `RTO_KEYSTORE_PASSWORD` or Gradle property of same name.
+Password via env var `RTO_KEYSTORE_PASSWORD` or Gradle property of same name (same as SonarQube admin password).
 **Never commit the keystore or password** — they are gitignored by `/android`.
 
 ### Android (EAS — AAB for Play Store)
