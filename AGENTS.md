@@ -92,7 +92,7 @@ eas build:configure                # configure credentials (first time)
 | Item            | Path / Note                                                                    |
 | --------------- | ------------------------------------------------------------------------------ |
 | Metadata        | `store/android/metadata.json`                                                  |
-| Privacy policy  | `store/privacy-policy.md` (host at `https://rsivanandan.com/inoffice/privacy`) |
+| Privacy policy  | `store/privacy-policy.md` (host at `https://rsivanandan.github.io/InOffice/privacy`) |
 | Screenshots     | `store/android/screenshots/` (phone screenshots, at least 2)                   |
 | Developer email | Set to `rsivanandan@gmail.com` in metadata                                     |
 | App signing     | Keystore at `android/app/inoffice-release.keystore` (keep safe!)               |

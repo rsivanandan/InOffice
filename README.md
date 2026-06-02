@@ -137,7 +137,7 @@ eas build:configure
 | Item           | Path                                                                             |
 | -------------- | -------------------------------------------------------------------------------- |
 | Metadata       | `store/android/metadata.json`                                                    |
-| Privacy policy | `store/privacy-policy.md` (hosted at `https://rsivanandan.com/inoffice/privacy`) |
+| Privacy policy | `store/privacy-policy.md` (hosted at `https://rsivanandan.github.io/InOffice/privacy`) |
 | Screenshots    | `store/android/screenshots/`                                                     |
 
 ## SonarQube
