@@ -61,4 +61,4 @@ We may update this privacy policy from time to time. Changes will be reflected w
 For questions about this privacy policy, contact:
 
 Rajesh T Sivanandan  
-https://rsivanandan.com
+iamrajeshts@gmail.com

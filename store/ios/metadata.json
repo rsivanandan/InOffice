@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "appleId": "rsivanandan@gmail.com",
+  "appleId": "iamrajeshts@gmail.com",
   "bundleIdentifier": "com.rsivanandan.inoffice",
   "appName": "InOffice — Track Your Office Days",
   "subtitle": "Track your office attendance",
@@ -8,11 +8,11 @@
   "secondaryCategory": "PRODUCTIVITY",
   "description": "Track your in-office attendance effortlessly. Mark days as in-office, absent, public holiday, personal leave, or sick leave. View monthly insights with exclusive and inclusive percentage tracking. Export your attendance data to Excel for reporting.",
   "keywords": ["office", "attendance", "tracking", "RTO", "return to office", "work", "productivity"],
-  "supportUrl": "https://github.com/rsivanandan/InOffice",
+  "supportUrl": "https://app.notion.com/p/Support-36f9b077268780209dd7fab20433693d?source=copy_link",
   "marketingUrl": "",
-  "privacyUrl": "https://raw.githubusercontent.com/rsivanandan/InOffice/main/store/privacy-policy.md",
+  "privacyUrl": "https://rsivanandan.github.io/InOffice/privacy",
   "copyright": "2026 Rajesh T Sivanandan",
-  "reviewEmail": "rsivanandan@gmail.com",
+  "reviewEmail": "iamrajeshts@gmail.com",
   "demoUser": "",
   "demoPassword": ""
 }
